@@ -1,0 +1,94 @@
+# 형범 (Hanguk Hyeong-Bum) — Korean learning PWA
+
+Progressive web app for Thai speakers learning Korean from zero, built around **daily-life routines**,
+with a **pixel-art player avatar** that levels up and a **Tamagotchi-style tiger pet (범이)** that hatches and grows.
+UI language: Thai + Korean. Owner: อีบุ๋ม (giszlozz@gmail.com). Started in a Claude Cowork session on 2026-10-28.
+
+## Stack
+- Vite 5 + React 18 (plain JSX, no router, no state lib) + `vite-plugin-pwa` (generateSW, autoUpdate, offline precache)
+- Pixel font: Galmuri11 (OFL), bundled in `src/assets/fonts/`. Thai falls back to system fonts.
+- Audio: Web Speech API `ko-KR` (`src/game/tts.js`) — no audio files.
+- Save data: `localStorage` key `hyeongbum-save-v1` (device-local only).
+
+```bash
+npm install
+npm run dev       # http://localhost:5173 (use --host to test on phone in same Wi-Fi)
+npm run build     # -> dist/ (static; deploy to GitHub Pages / Netlify / Vercel)
+npm run preview
+npm run icons     # regenerate PWA icons from the tiger pixel grid (needs Python + Pillow)
+```
+
+## Layout
+```
+src/
+  main.jsx            SW registration + GameProvider
+  App.jsx             top bar, bottom nav (홈/배우기/루틴/복습/상점), notices (level-up/evolve/streak), onboarding, settings
+  game/store.jsx      reducer + persistence + 1-min pet tick. All game rules live here.
+  game/logic.js       balance numbers: XP curve, SRS intervals, pet decay/mood, pet stages, quiz builder
+  game/hangul.js      Unicode compose/decompose of syllables (초성/중성/종성 tables) + distractor helpers for the syllable game
+  game/stt.js         SpeechRecognition wrapper (ko-KR): interim results for the live transcript, stop on speech end, one silent auto-restart on 'no-speech', Thai error messages · canListen()
+  game/speech_score.js evaluateSpeech(text, alts, level): syllable alignment (Needleman–Wunsch) → ops match/sub/miss/extra with per-part diffs (lead/vowel/tail) + Thai explanations & articulation tips; score = 0.6·jamo similarity (ortho vs phonetic, 연음·구개음화) + 0.4·syllable-match − extra/miss penalties; numerals 3시→세 시; repeats contained → 95. Levels: standard pass 80 / strict pass 90 (pref in localStorage 'hb-speak-level')
+  game/loot.js        pure seeded RNG: free daily box (`rollBox kind=free`, pity: every 5th free box = rare+ item), paid box (90 coins, always a NEW item, odds in ODDS), `featuredPick` (daily featured item, −30%, stored in `daily.featured`), `salePrice`
+  game/tts.js         speak(text) — cancel+retry watchdog; dispatches window event 'tts-problem' ('stuck'|'no-voice') -> toast in App.jsx
+  data/lessons.js     Hangul (vowels, consonants×2) + 'basics' group (받침 ×2, Sino/native numbers, time) + 9 daily-life scenes; each item {ko, rom, read(Thai reading), th, speak?, kind}
+  data/routine.js     12 daily habits phrased in past tense (-았/었어요) — tick in real life for XP
+  data/shop.js        foods (feed pet) + gear (hat/glasses/neck/top/room) with price & level lock
+  pixel/items.js      THE collectible catalogue (sprites + shop data in one place): ITEMS (avatar+pet gear), ROOM_ITEMS (spots), WALLS, FLOORS, SETS. Validate widths with a quick node script after editing (all avatar rows = 16 chars)
+  pixel/sprites.js    base avatar/pet/room sprites + palettes; merges items.js overlays
+  pixel/Sprite.jsx    grid -> crisp SVG (run-length rects, optional auto-outline, overlay layers)
+  pixel/Characters.jsx Avatar (bald base + layered hair/top/bottom/shoes/back/neck/glasses/hat, driven by player.look + outfit), Pet (stage + mood eyes), RoomItem
+  components/         PreviewModal (zoom + try-on before buying, shows set progress), RoomScene (mini room for previews), LookEditor (gender/skin/hair/colour/eyes), CharacterModal (look · wardrobe · achievements), GearPreview, Quiz, ui
+  data/achievements.js 16 auto-unlocked achievements (coins + exclusive items), checked after every action by `checkAch` in store.jsx
+  pages/              Home (room + pet care), Learn, SpeakingGame (🎤 말하기 연습: say-it-back with Web Speech API), SyllableGame (글자 만들기 — build 초성+중성+받침 for single-syllable words, 6 rounds, opened from Learn), LessonView (flashcards -> quiz -> rewards), Routine, Review (SRS), Shop
+```
+
+## Collections (188 items)
+- Slots: top, bottom, shoes, hat, glasses, face, neck, back, hand (avatar) · pet_hat, pet_face, pet_neck (범이) · room spots wallC/wallR/floorL/floorR/rug + wall & floor styles (CSS variables, classes in styles.css).
+- Rarity from price (`rarityOf`): ≤55 common, ≤100 rare, ≤200 epic, else legendary; `achv` items always legendary. Shop cards/wardrobe/book show rarity glow.
+- `player.room = {wallC, wallR, floorL, floorR, rug, wall, floor}` (migrated from old owned room items); `pet.outfit = {pet_hat, pet_face, pet_neck}`; buying auto-equips/places (`equipItem` in store).
+- 14 SETS give a one-time coin bonus when complete (auto achievements `set_*`); Collection Book (Character ▸ 📕 สะสม) shows totals, rarity counts, set progress and silhouettes for missing items. Level-1 starter items (STARTER overrides in data/shop.js, ~23 cheap items across 13 slots; start coins 60). Shop cards are 3 columns; tap the preview to open PreviewModal. Whole catalogue ≈14k coins, so it's a months-long goal at ~80–100 coins/day.
+
+## Surprise & wishlist (collection retention)
+- Home 🎁 card: free daily box (needs `daily.xp>0`, once/day via `OPEN_BOX`) → coins 10–35 / a food / an item; featured item (−30%) opens PreviewModal; banner when a wished item becomes affordable.
+- Shop: ⭐ featured banner on every gear tab with strike-through price, ☆/★ wishlist (`player.wish`, auto-cleared on purchase) + "★ อยากได้" tab with progress bars, set tags on cards ("ชิ้นสุดท้าย!" when 1 away), mystery box in "특별" tab.
+- Buying an epic/legendary item, or opening any box, queues a `loot` notice (App.jsx `LootNotice`): shaking gift box → tap to open → reveal with rarity glow (+confetti for epic/legendary).
+- Collection Book sorts sets by fewest missing, flags ≤2 missing (🔥), shows remaining coin cost per set and for the whole catalogue (~12.9k at the time of writing).
+- Round eyes have a white sparkle pixel (`w` in AVATAR_PAL).
+
+## Character progression
+- `player.look = {gender m|f, skin 0-5, hair short|spiky|buzz|long|bob|ponytail, hairColor 0-7, eyes dot|round|calm}` chosen at onboarding, editable any time from Home ▸ 👤 ตัวละคร (`SET_LOOK`, sanitised in store).
+- Gear slots: top, bottom, shoes, hat, glasses, neck, back (+ room). `GEAR` in data/shop.js; shop tabs 음식/옷/소품/방/특별 via `SLOT_GROUPS`; `achv:true` items are never sold (only granted by achievements). Level-up modal lists the gear unlocked at that level.
+- Ranks by level (`RANKS`/`rankFor`): 새내기 → 학생 → 열공러 → 한국어 러버 → 통역사 지망생 → 한글 마스터 → 한국 통, shown on the room nametag and in the character modal.
+
+## Game rules (current)
+- Lesson done reward (`lessonReward` in logic.js) scales with accuracy `acc=correct/total`: XP 8+42·acc, coins 3+9·acc, growth 6+8·acc (perfect = 50 XP). Full only the first time a lesson is ever finished; later days ×0.5.
+  Same-day repeats pay only the *difference* vs what was already paid for that lesson today (`daily.lessons[id]`), so equal/lower scores earn 0. Repeating still counts toward streak. Items enter SRS: answered-right → due tomorrow, **answered-wrong → box 1, due today** (`missedIds`).
+- Lesson result shows the missed words + "ลองเฉพาะคำที่ผิด" retry quiz (no reward). Quiz distractors prefer the same lesson, then same kind, then anything.
+- Beginner path: `suggestLesson(date, state.lessons, player.skipHangul)` returns the first unfinished Hangul lesson until done (unless onboarding said "อ่านฮันกึลได้แล้ว"), then the time-of-day scene.
+- Onboarding asks level (skipHangul) + daily time → `player.goal` XP (30/50/80), then opens the first suggested lesson; goal changeable in Settings (`SET_GOAL`).
+- Review correct: +4 XP +1 coin +2 growth, **once per item per day** (`daily.reviewed`); SRS boxes 1–6 → 1,2,4,7,15,30 days; wrong → box 1, due today. Extra practice mode pays nothing.
+- Speaking practice (🎤): 5 sentences/round (learned items first), ≤3 tries each, pass ≥80 (standard) / ≥90 (strict); result screen = score ring (count-up), what the system heard, per-syllable compare board (✓ match · ≈ same sound · ✗ wrong · ∅ not heard · + extra; tap a cell to hear it), problem cards with Thai explanation + tips; Space/Enter shortcuts → +4 XP +1 coin +1 growth per passed sentence, capped at 6 sentences/day (`daily.speaking`, `speakReward`); `speak` daily quest only picked when `canListen()`; achievements first_speak / speak50 (`stats.spoken`).
+- Syllable game: +3 XP +1 coin +1 growth per solved round (≤2 tries), capped at 6 rounds/day total (`daily.syllable`, `syllableReward`); replays free but unpaid; still counts toward streak.
+- Routine tick: +5 XP +2 coins (once per item per day, resets at local midnight). Items can be switched off in the Routine tab (✎ ปรับ, `player.routineOff`, min 3 active); current time-of-day group is listed first with a "ตอนนี้" badge.
+- Flashcards (words ≤4 syllables) show each syllable split into 초성+중성+받침; Hangul/basics lessons link to the syllable game.
+- Level L→L+1 needs `60 + 25*(L-1)` XP; level-up bonus 30 coins. Daily goal = `player.goal` XP (default 50). Streak = consecutive days with any activity (lesson/review/routine/quest/syllable); **streak freeze** (🧊 60 coins in Shop ▸ พิเศษ, hold ≤2, `player.freezes`) is consumed automatically for each missed day (`touchStreak`, `liveStreak(st, today, freezes)`), gaps larger than the freezes cover reset to 1 and keep the freezes; `liveStreak()` shows 0 once a day is missed; `streak.best` kept; coin bonus at 3/7/14/30/60/100 days (`STREAK_BONUS`).
+- Pet stats 0–100 decay hourly (awake: full −4, clean −2, happy −3/−5 if hungry (+2 more if clean<25), energy −3; asleep: clean −1, energy +15, auto-wakes at 100). `WASH` (씻기) sets clean 100, only when clean<90.
+- Neglect: if full/happy/clean <25, growth from *learning* actions is halved (`growthMult`); care actions (feed/play/wash) are exempt. Moods: sleep > hungry > tired > dirty > sad > happy.
+- Pet wants: 3 time slots/day (05–11, 11–17, 17–05, `wantSlot`); at slot start `ensureWant` stores `pet.want = {slot, foodId}` chosen by `chooseWant` so it's always satisfiable (food in inventory → else affordable → else milk). Korean "X 먹고 싶어요"; feeding it once per slot gives +3 XP, +3 growth, +10 happy (`pet.wantDone` = fulfilled slot). The banner has one-tap "ให้เลย"/"ซื้อ" buttons.
+- First hatch (egg→baby) shows a special hatch modal. Egg growth bar reads "ใกล้ฟักเป็น …".
+- Daily quests (`data/quests.js`, `pickQuestIds`): 3 per day picked at day-open and stored in `daily.quests` (the `review` quest is only picked if ≥5 words are due, so it's never impossible); progress derives from existing daily counters (lessons/reviewed/syllable/routine/perfect/care) so replays can't farm; claim once each via `QUEST_CLAIM` (+XP/coins), +15 coins when all 3 claimed. Reaching the daily XP goal pays +10 coins once (`daily.goalPaid`).
+- Pet stages by growth: egg 0 → baby 30 → teen 150 → adult 400.
+- Time-of-day suggestion: `suggestLesson()` picks the daily scene whose `hours` cover the current hour.
+
+## Ideas / next steps (not done yet)
+- More content: weather, hospital/pharmacy, phone/chat slang, double consonants/diphthongs; syllable game extensions (multi-syllable words, double final consonants)
+- Speaking level 2: Azure AI Speech pronunciation assessment (ko-KR is in its supported-locale list; accuracy/fluency/completeness, no phoneme names or prosody for Korean) behind a Supabase edge function. Level 1 (Web Speech API) is done; it only compares recognised TEXT, not accent.
+- Collection ideas from the persona review: try-on before buying, wishlist, daily mystery box / featured item rotation, purchase fanfare for epic/legendary
+- Pet mini-games (e.g. catch falling Hangul), more evolutions/outfits, room furniture placement
+- Push/notification reminders for routine & reviews; export/import save (JSON) or cloud sync
+- Native Korean review of Thai readings (`read`) — they are approximations
+
+## Conventions
+- Keep all user-facing text bilingual (Korean + Thai). Korean in `.ko` class (pixel font).
+- New sprites: rows must all be the same width; avatar overlays are 16 wide and keyed by row index. Overlay '.' = pass-through (layers can only add/recolour pixels, never erase); `s` (skin) is injected into every overlay palette so shorts/skirt legs follow the skin tone. The base avatar has NO hair and NO legs: hair comes from `HAIR_STYLES`, legs from the bottom overlay (default pants_navy / skirt_navy by gender).
+- Reducer must stay pure (React StrictMode double-invokes it).
