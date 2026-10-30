@@ -228,45 +228,55 @@ export default function SpeakingGame({ onClose }) {
     <div className="overlay">
       {header}
       <div className="speak-box">
-        <div className="lv-row">
-          <small className="muted">ความเข้มงวด</small>
-          <div className="lv-toggle" role="group" aria-label="ระดับความเข้มงวด">
+        <div className="sp-top">
+          <div className="dots-row">{items.map((_, k) => <span key={k} className={k < i ? 'done' : k === i ? 'cur' : ''} />)}</div>
+          <div className="seg" role="group" aria-label="เกณฑ์การให้คะแนน">
             {Object.entries(LEVELS).map(([k, v]) => (
-              <button key={k} className={`lv-opt ${level === k ? 'on' : ''}`} onClick={() => changeLevel(k)}>{v.th} · {v.pass}</button>
+              <button key={k} className={`seg-opt ${level === k ? 'on' : ''}`} onClick={() => changeLevel(k)}>
+                <b>{v.pass}</b><small>{v.th}</small>
+              </button>
             ))}
           </div>
         </div>
-        <div className="dots-row">{items.map((_, k) => <span key={k} className={k < i ? 'done' : k === i ? 'cur' : ''} />)}</div>
 
-        <div className="quiz-card pixel-box speak-target">
+        <div className="sp-card pixel-box">
+          <span className="sp-cap">🗣 พูดตามประโยคนี้</span>
           <div className="big-ko speak-text">{it.ko}</div>
-          <div className="read">{it.read}</div>
-          <div className="rom mono">{it.rom}</div>
-          <div className="mean">{it.th}</div>
-          <div className="row gap center-row">
-            <button className="speak" onClick={() => speak(it.speak || it.ko)}>🔊 ฟัง</button>
-            <button className="speak" onClick={() => speak(it.speak || it.ko, 0.55)}>🐢 ช้า ๆ</button>
+          <div className="sp-read">{it.read}</div>
+          <div className="sp-rom mono">{it.rom}</div>
+          <div className="sp-mean">{it.th}</div>
+          <div className="sp-listen">
+            <button className="pixel-btn" onClick={() => speak(it.speak || it.ko)}>🔊 ฟังตัวอย่าง</button>
+            <button className="pixel-btn" onClick={() => speak(it.speak || it.ko, 0.55)}>🐢 ช้า ๆ</button>
           </div>
         </div>
 
         {phase === 'ready' && (
-          <>
-            <button className="mic-btn" onClick={start} aria-label="เริ่มพูด">🎤<small>แตะแล้วพูดตามประโยคด้านบน</small></button>
-            <small className="muted">{tries > 0 ? `ลองมาแล้ว ${tries}/${MAX_TRIES} ครั้ง · ` : ''}เกณฑ์ผ่าน {cfg.pass} คะแนน · กด Space เพื่อเริ่ม (คอมพิวเตอร์)</small>
-          </>
+          <div className="mic-wrap">
+            <button className="mic-btn" onClick={start} aria-label="เริ่มพูด">
+              <span className="mic-ring" /><span className="mic-ring r2" />
+              <span className="mic-core"><span className="mic-ico">🎤</span></span>
+            </button>
+            <b className="mic-label">แตะเพื่อเริ่มพูด</b>
+            <small className="muted">
+              {tries > 0 ? `ลองแล้ว ${tries}/${MAX_TRIES} ครั้ง · ` : ''}ผ่านที่ {cfg.pass} คะแนน<span className="kbd-hint"> · กด Space เพื่อเริ่ม</span>
+            </small>
+          </div>
         )}
 
         {phase === 'listening' && (
-          <>
+          <div className="mic-wrap">
             <button className="mic-btn live" onClick={stop} aria-label="หยุดฟัง">
-              <span className="wave" aria-hidden="true"><i /><i /><i /><i /><i /></span>
-              <small>{silent ? 'ยังไม่ได้ยินเสียง… ฟังอีกครั้ง' : 'กำลังฟัง… พูดได้เลย (แตะเพื่อหยุด)'}</small>
+              <span className="mic-ring" /><span className="mic-ring r2" />
+              <span className="mic-core"><span className="wave" aria-hidden="true"><i /><i /><i /><i /><i /></span></span>
             </button>
+            <b className="mic-label">{silent ? 'ยังไม่ได้ยินเสียง… ฟังอีกครั้ง' : 'กำลังฟัง… พูดได้เลย'}</b>
+            <small className="muted">แตะปุ่มเพื่อหยุดเมื่อพูดจบ</small>
             <div className={`live-box ${live ? 'on' : ''}`} aria-live="polite">
-              <small className="muted">ระบบได้ยิน</small>
-              <div className="ko live-text">{live || '…'}</div>
+              <small className="muted">ระบบได้ยินว่า</small>
+              <div className="ko live-text">{live || <span className="blink">…</span>}</div>
             </div>
-          </>
+          </div>
         )}
 
         {error && <div className="tip bad-tip">⚠️ {error}</div>}
@@ -313,8 +323,11 @@ export default function SpeakingGame({ onClose }) {
           </div>
         )}
 
-        {phase !== 'result' && <button className="link" onClick={next}>ข้ามประโยคนี้</button>}
-        <small className="muted speak-note">เสียงถูกส่งให้บริการรู้จำเสียงของเบราว์เซอร์ประมวลผล (เช่น Google/Apple)</small>
+        {phase !== 'result' && <button className="link sp-skip" onClick={next}>ข้ามประโยคนี้ ▶</button>}
+        <details className="sp-privacy">
+          <summary>🔒 เสียงของคุณไปที่ไหน?</summary>
+          <p>การฟังใช้ระบบรู้จำเสียงของเบราว์เซอร์ (Chrome ใช้ของ Google, Safari ใช้ของ Apple) แอปนี้ไม่ได้อัดหรือเก็บเสียงของคุณไว้เลย</p>
+        </details>
       </div>
     </div>
   )
