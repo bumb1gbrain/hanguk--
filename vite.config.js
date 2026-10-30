@@ -28,7 +28,12 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,png,svg,woff2}'],
-        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+        // ไฟล์เสียงพากย์: แคชเมื่อเคยเล่นแล้ว (เล่นซ้ำ/ออฟไลน์ได้ทันที) รองรับ Range request ของ Safari
+        runtimeCaching: [
+          { urlPattern: /\/voice\/[^/]+\.m4a$/, handler: 'CacheFirst', options: { cacheName: 'voice-clips', expiration: { maxEntries: 2500 }, cacheableResponse: { statuses: [0, 200] }, rangeRequests: true } },
+          { urlPattern: /\/voice\/manifest\.json$/, handler: 'StaleWhileRevalidate', options: { cacheName: 'voice-manifest' } },
+        ]
       }
     })
   ]

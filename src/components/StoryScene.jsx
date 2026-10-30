@@ -157,7 +157,8 @@ export function StoryBook({ onClose, onPlay }) {
   const seen = state.story?.seen || {}
   return (
     <div className="modal-bg" onClick={onClose}>
-      <div className="modal pixel-box" onClick={(e) => e.stopPropagation()}>
+      <div className="modal pixel-box" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+        <button className="modal-x" onClick={onClose} aria-label="ปิด">✕</button>
         <h2 className="center">📖 เรื่องราว</h2>
         {CHAPTERS.map((c) => (
           <div key={c.id} className="story-chap">

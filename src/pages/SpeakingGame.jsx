@@ -5,7 +5,7 @@ import { isSyllable } from '../game/hangul.js'
 import { shuffle, speakReward, SPEAK_CAP, stageFor } from '../game/logic.js'
 import { canListen, listen, STT_ERRORS } from '../game/stt.js'
 import { evaluateSpeech, LEVELS } from '../game/speech_score.js'
-import { speak } from '../game/lessonVoice.js'
+import { speak, stopSpeech } from '../game/lessonVoice.js'
 import { Pet } from '../pixel/Characters.jsx'
 
 const ROUNDS = 5
@@ -89,7 +89,7 @@ export default function SpeakingGame({ onClose }) {
   const cfg = LEVELS[level]
   const shown = useCountUp(res?.score ?? 0, tries)
 
-  useEffect(() => () => ctl.current?.abort(), [])
+  useEffect(() => () => { ctl.current?.abort(); stopSpeech() }, [])
 
   const changeLevel = (lv) => {
     setLevel(lv)

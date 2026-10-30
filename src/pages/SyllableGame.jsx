@@ -1,9 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useGame } from '../game/store.jsx'
 import { ALL_ITEMS } from '../data/lessons.js'
 import { LEAD, VOWEL, TAIL, isSyllable, decompose, compose, choices, COMMON_LEAD, COMMON_VOWEL, COMMON_TAIL } from '../game/hangul.js'
 import { syllableReward, SYLLABLE_CAP, stageFor } from '../game/logic.js'
-import { speak } from '../game/lessonVoice.js'
+import { speak, stopSpeech } from '../game/lessonVoice.js'
 import { SpeakBtn } from '../components/ui.jsx'
 import { Pet } from '../pixel/Characters.jsx'
 
@@ -31,6 +31,7 @@ export default function SyllableGame({ onClose }) {
   const { state, dispatch } = useGame()
   const rounds = useMemo(() => [...TARGETS].sort(() => Math.random() - 0.5).slice(0, ROUNDS).map(newRound), [])
   const [i, setI] = useState(0)
+  useEffect(() => () => stopSpeech(), [])
   const [pick, setPick] = useState({ l: null, v: null, t: 0 })
   const [tries, setTries] = useState(0)
   const [verdict, setVerdict] = useState(null) // null | 'wrong' | 'right' | 'fail'

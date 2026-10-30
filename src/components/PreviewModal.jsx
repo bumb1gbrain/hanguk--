@@ -34,7 +34,7 @@ export default function PreviewModal({ id, onClose }) {
   const outfit = mode === 'mine' ? { ...player.outfit, [g.slot]: g.id } : { top: 'top_blue', [g.slot]: g.id }
 
   return (
-    <Modal onClose={onClose}>
+    <Modal onClose={onClose} closable>
       <div className="pv">
         <div className="pv-head">
           <button className="ko pv-name" onClick={() => speak(g.ko)}>{g.ko} 🔊</button>

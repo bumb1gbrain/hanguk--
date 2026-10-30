@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { speak, speakFor } from '../game/lessonVoice.js'
 
 export function Bar({ value, max = 100, color = 'var(--accent)', label, icon }) {
@@ -29,10 +30,20 @@ export function SpeakBtn({ text, small, item }) {
   )
 }
 
-export function Modal({ children, onClose }) {
+// closable = มีปุ่ม ✕ ลอยมุมขวาบน (ไม่เลื่อนหายตอนเนื้อหายาว) และกด Esc ปิดได้ · ล็อกการเลื่อนของหน้าด้านหลังระหว่างเปิด
+export function Modal({ children, onClose, closable = false }) {
+  useEffect(() => {
+    document.body.classList.add('modal-open')
+    const onKey = (e) => { if (closable && e.key === 'Escape') onClose?.() }
+    window.addEventListener('keydown', onKey)
+    return () => { document.body.classList.remove('modal-open'); window.removeEventListener('keydown', onKey) }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div className="modal-bg" onClick={onClose}>
-      <div className="modal pixel-box" onClick={(e) => e.stopPropagation()}>{children}</div>
+      <div className="modal pixel-box" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+        {closable && <button className="modal-x" onClick={onClose} aria-label="ปิด">✕</button>}
+        {children}
+      </div>
     </div>
   )
 }

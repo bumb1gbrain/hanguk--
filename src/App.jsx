@@ -9,7 +9,7 @@ import { SPECIES, SPECIES_LIST } from './pixel/pets.js'
 import { BOND_LEVEL_COINS } from './data/tricks.js'
 import LookEditor from './components/LookEditor.jsx'
 import { useSync } from './sync/SyncProvider.jsx'
-import { speakSeq } from './game/lessonVoice.js'
+import { speakSeq, stopSpeech } from './game/lessonVoice.js'
 import { TEACHERS, DEFAULT_TEACHER } from './game/voices.js'
 import { canSpeak, speakSeq as deviceSeq, getTtsPrefs, setTtsPrefs, listKoVoices, currentVoiceName } from './game/tts.js'
 import GearPreview from './components/GearPreview.jsx'
@@ -279,11 +279,11 @@ function VoiceSettings() {
   return (
     <div className="choices">
       <small>🔊 เสียงอ่านภาษาเกาหลี</small>
-      <div className="row gap">
+      <div className="seg-row">
         {Object.entries(TEACHERS).map(([id, t]) => (
-          <button key={id} className={`choice ${teacher && cur === id ? 'on' : ''}`} onClick={() => update({ source: 'ai', teacher: id })}>{t.icon} {t.th}</button>
+          <button key={id} className={`choice seg ${teacher && cur === id ? 'on' : ''}`} onClick={() => update({ source: 'ai', teacher: id })}><span className="seg-ico">{t.icon}</span><b>{t.th}</b></button>
         ))}
-        <button className={`choice ${!teacher ? 'on' : ''}`} onClick={() => update({ source: 'device' })}>📱 เสียงของเครื่อง</button>
+        <button className={`choice seg ${!teacher ? 'on' : ''}`} onClick={() => update({ source: 'device' })}><span className="seg-ico">📱</span><b>เสียงเครื่อง</b></button>
       </div>
       {teacher ? (
         <>
@@ -292,9 +292,9 @@ function VoiceSettings() {
         </>
       ) : (
         <>
-          <div className="row gap">
+          <div className="seg-row">
             {SPEEDS.map((sp) => (
-              <button key={sp.rate} className={`choice ${prefs.rate === sp.rate ? 'on' : ''}`} onClick={() => update({ rate: sp.rate })}>{sp.th}</button>
+              <button key={sp.rate} className={`choice seg ${prefs.rate === sp.rate ? 'on' : ''}`} onClick={() => update({ rate: sp.rate })}><b>{sp.th}</b></button>
             ))}
           </div>
           {voices.length > 1 && (
@@ -349,15 +349,15 @@ function Settings({ onClose }) {
   const [petn, setPetn] = useState(state.pet.name)
   const acc = state.stats.answered ? Math.round((state.stats.correct / state.stats.answered) * 100) : 0
   return (
-    <Modal onClose={onClose}>
+    <Modal onClose={onClose} closable>
       <h3>설정 · ตั้งค่า</h3>
       <label className="field"><span>ชื่อของฉัน</span><input value={pn} maxLength={10} onChange={(e) => setPn(e.target.value)} /></label>
       <label className="field"><span>ชื่อสัตว์เลี้ยง</span><input value={petn} maxLength={10} onChange={(e) => setPetn(e.target.value)} /></label>
       <div className="choices">
         <small>เป้า XP ต่อวัน</small>
-        <div className="row gap">
+        <div className="seg-row">
           {GOALS.map((g) => (
-            <button key={g.xp} className={`choice ${(state.player.goal || 50) === g.xp ? 'on' : ''}`} onClick={() => dispatch({ type: 'SET_GOAL', goal: g.xp })}>{g.min} นาที · {g.xp}</button>
+            <button key={g.xp} className={`choice seg ${(state.player.goal || 50) === g.xp ? 'on' : ''}`} onClick={() => dispatch({ type: 'SET_GOAL', goal: g.xp })}><b>{g.min} นาที</b><small>{g.xp} XP · {g.th}</small></button>
           ))}
         </div>
       </div>
@@ -366,17 +366,19 @@ function Settings({ onClose }) {
       <p className="muted small">
         คำที่เรียนแล้ว {Object.keys(state.srs).length} · ตอบทั้งหมด {state.stats.answered} ข้อ · ความแม่นยำ {acc}%
       </p>
-      <div className="row gap">
-        <button className="pixel-btn primary" onClick={() => {
-          dispatch({ type: 'RENAME', who: 'player', name: pn.trim() || state.player.name })
-          dispatch({ type: 'RENAME', who: 'pet', name: petn.trim() || state.pet.name })
-          onClose()
-        }}>บันทึก</button>
-        <button className="pixel-btn danger" onClick={() => {
+      <button className="pixel-btn primary save-btn" onClick={() => {
+        dispatch({ type: 'RENAME', who: 'player', name: pn.trim() || state.player.name })
+        dispatch({ type: 'RENAME', who: 'pet', name: petn.trim() || state.pet.name })
+        onClose()
+      }}>✓ บันทึก</button>
+      <p className="muted small">{sync.configured ? 'ข้อมูลเก็บในเครื่องนี้เสมอ และสำรองบนคลาวด์เมื่อเข้าสู่ระบบ' : 'ข้อมูลเก็บในเครื่องนี้เท่านั้น'}</p>
+      <details className="danger-zone">
+        <summary>⚠️ พื้นที่อันตราย</summary>
+        <p className="muted small">ลบความคืบหน้าทั้งหมดและเริ่มเกมใหม่ ย้อนกลับไม่ได้</p>
+        <button className="pixel-btn danger small" onClick={() => {
           if (window.confirm(sync.user ? 'ลบความคืบหน้าทั้งหมดและเริ่มใหม่? (เซฟบนคลาวด์จะถูกแทนที่ด้วยเซฟใหม่ด้วย)' : 'ลบความคืบหน้าทั้งหมดและเริ่มใหม่?')) { dispatch({ type: 'RESET' }); onClose() }
         }}>เริ่มใหม่ทั้งหมด</button>
-      </div>
-      <p className="muted small">{sync.configured ? 'ข้อมูลเก็บในเครื่องนี้เสมอ และสำรองบนคลาวด์เมื่อเข้าสู่ระบบ' : 'ข้อมูลเก็บในเครื่องนี้เท่านั้น'} · 🔊 ต้องมีเสียงภาษาเกาหลีในระบบ (iOS/Android/Chrome ส่วนใหญ่มีให้)</p>
+      </details>
     </Modal>
   )
 }
@@ -411,6 +413,7 @@ export default function App() {
   const { state, dispatch } = useGame()
   const sync = useSync()
   const [tab, setTab] = useState('home')
+  useEffect(() => { stopSpeech() }, [tab]) // เปลี่ยนแท็บ = หยุดเสียงที่ค้างอยู่
   const [lesson, setLesson] = useState(null)
   const [settings, setSettings] = useState(false)
   const lv = levelInfo(state.player.xp)

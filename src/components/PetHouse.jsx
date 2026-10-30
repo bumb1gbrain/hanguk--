@@ -12,7 +12,7 @@ export default function PetHouse({ onClose }) {
   const lv = levelInfo(state.player.xp).level
   const box = state.petBox || {}
   return (
-    <Modal onClose={onClose}>
+    <Modal onClose={onClose} closable>
       <h2 className="center">🏠 บ้านสัตว์เลี้ยง</h2>
       <p className="muted small center">ตัวที่พักอยู่ในบ้านค่าสถานะจะไม่ลดลง · สลับมาเลี้ยงได้ทุกเมื่อ</p>
       <div className="pet-house">

@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useGame } from '../game/store.jsx'
 import { buildQuiz } from '../game/logic.js'
 import { canSpeak } from '../game/tts.js'
-import { speakFor } from '../game/lessonVoice.js'
+import { speakFor, stopSpeech, preloadItems } from '../game/lessonVoice.js'
 import { ALL_ITEMS } from '../data/lessons.js'
 import Quiz from '../components/Quiz.jsx'
 import { SpeakBtn } from '../components/ui.jsx'
@@ -27,6 +27,7 @@ export default function LessonView({ lesson, onClose }) {
   const [retryNote, setRetryNote] = useState(null) // ผลการลองเฉพาะคำที่ผิด (ไม่มีรางวัล)
   const [retrying, setRetrying] = useState(false)
   const [syl, setSyl] = useState(false) // เปิดเกมประกอบพยางค์ซ้อนทับ
+  useEffect(() => { preloadItems(items); return () => stopSpeech() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const startQuiz = () => {
     setQuestions(buildQuiz(items, pool, { n: Math.min(8, items.length), canListen: canSpeak() }))
@@ -110,7 +111,7 @@ export default function LessonView({ lesson, onClose }) {
           </div>
           <div className="dots">{items.map((_, k) => <span key={k} className={k === idx ? 'cur' : k < idx ? 'done' : ''} />)}</div>
           <div className="row gap">
-            <button className="pixel-btn" disabled={idx === 0} onClick={() => setIdx(idx - 1)}>◀ ก่อนหน้า</button>
+            <button className="pixel-btn" disabled={idx === 0} onClick={() => { stopSpeech(); setIdx(idx - 1) }}>◀ ก่อนหน้า</button>
             {idx < items.length - 1 ? (
               <button className="pixel-btn primary" onClick={() => { setIdx(idx + 1); speakFor(items[idx + 1]) }}>ถัดไป ▶</button>
             ) : (

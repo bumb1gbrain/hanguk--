@@ -166,7 +166,7 @@ export default function Home({ openLesson, go }) {
             <small className="muted">{sug.group === 'hangul' ? 'เริ่มจากอ่านฮันกึลก่อน · 한글부터!' : 'แนะนำตอนนี้ · 지금 추천'}</small>
             <div><b className="ko">{sug.title}</b> — {sug.titleTh}</div>
           </div>
-          <span className="chev">▶</span>
+          <span className="go-pill">เรียน ▶</span>
         </button>
         <div className="chips">
           <button className="pixel-btn small" onClick={() => go('review')}>🔁 ทบทวน <b>{due}</b></button>
@@ -252,14 +252,17 @@ export default function Home({ openLesson, go }) {
         )}
         {fx && <small className="good-fx">{fx}</small>}
         <div className="row gap actions">
-          <button className="pixel-btn" disabled={pet.asleep} onClick={() => setFeeding(true)}>🍙 먹이</button>
-          <button className="pixel-btn" disabled={pet.asleep || pet.energy < 10} onClick={() => { dispatch({ type: 'PLAY' }); poke(); burst('🎾', 3); doAv('cheer'); doPet('spin', 1100) }}>🎾 놀기</button>
-          <button className="pixel-btn" disabled={pet.asleep || (pet.clean ?? 80) >= 90} onClick={() => { dispatch({ type: 'WASH' }); poke(); burst('🫧', 6); doAv('cheer'); doPet('wobble', 1100) }}>🫧 씻기</button>
-          <button className="pixel-btn" disabled={pet.asleep} onClick={hug}>🤗 안아주기</button>
-          <button className="pixel-btn" onClick={() => dispatch({ type: 'SLEEP' })}>{pet.asleep ? '☀️ 깨우기' : '🌙 재우기'}</button>
+          <button className="pixel-btn act" disabled={pet.asleep} onClick={() => setFeeding(true)}><span className="act-ico">🍙</span><span className="ko">먹이</span><small>ให้อาหาร</small></button>
+          <button className="pixel-btn act" disabled={pet.asleep || pet.energy < 10} onClick={() => { dispatch({ type: 'PLAY' }); poke(); burst('🎾', 3); doAv('cheer'); doPet('spin', 1100) }}><span className="act-ico">🎾</span><span className="ko">놀기</span><small>เล่น</small></button>
+          <button className="pixel-btn act" disabled={pet.asleep || (pet.clean ?? 80) >= 90} onClick={() => { dispatch({ type: 'WASH' }); poke(); burst('🫧', 6); doAv('cheer'); doPet('wobble', 1100) }}><span className="act-ico">🫧</span><span className="ko">씻기</span><small>อาบน้ำ</small></button>
+          <button className="pixel-btn act" disabled={pet.asleep} onClick={hug}><span className="act-ico">🤗</span><span className="ko">안기</span><small>กอด</small></button>
+          <button className="pixel-btn act" onClick={() => dispatch({ type: 'SLEEP' })}><span className="act-ico">{pet.asleep ? '☀️' : '🌙'}</span><span className="ko">{pet.asleep ? '깨우기' : '재우기'}</span><small>{pet.asleep ? 'ปลุก' : 'พักผ่อน'}</small></button>
         </div>
-        <div className="tricks">
-          <small className="muted">🎓 สอนคำสั่ง · 훈련 {canTrick ? '' : (pet.asleep ? '(กำลังหลับ)' : pet.growth < 30 ? '(ต้องฟักไข่ก่อน)' : '(พลังไม่พอ)')}</small>
+        <details className="tricks">
+          <summary>
+            <span>🎓 สอนคำสั่ง · <span className="ko">훈련</span></span>
+            <small className="muted">{canTrick ? `วันนี้ ${tricksDone.length}/${TRICKS.length} ท่า` : (pet.asleep ? 'กำลังหลับ' : pet.growth < 30 ? 'ต้องฟักไข่ก่อน' : 'พลังไม่พอ')}</small>
+          </summary>
           <div className="trick-row">
             {TRICKS.map((t) => {
               const locked = bond.level < t.level
@@ -273,7 +276,7 @@ export default function Home({ openLesson, go }) {
               )
             })}
           </div>
-        </div>
+        </details>
       </section>
 
       {/* ── ของขวัญวันนี้: กล่องสุ่มฟรี + ของเด่นลดราคา + ของที่อยากได้ ── */}
@@ -332,7 +335,7 @@ export default function Home({ openLesson, go }) {
       {pv && <PreviewModal id={pv} onClose={() => setPv(null)} />}
 
       {feeding && (
-        <Modal onClose={() => setFeeding(false)}>
+        <Modal onClose={() => setFeeding(false)} closable>
           <h3>먹이 주기 · ให้อาหาร{pet.name}</h3>
           {foodsHave.length === 0 && <p className="muted">ยังไม่มีอาหารในกระเป๋า ไปซื้อที่ร้านค้าก่อนนะ</p>}
           <div className="food-list">

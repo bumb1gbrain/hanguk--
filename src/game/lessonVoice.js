@@ -16,6 +16,41 @@ function stopClip() {
   if (clip) { try { clip.pause() } catch { /* ignore */ } clip = null }
 }
 
+// หยุดเสียงทุกอย่างทันที (ใช้ตอนเปลี่ยนหน้า/ปิดบทเรียน/ข้ามโจทย์ เพื่อไม่ให้เสียงเก่าค้างพูดต่อ)
+export function stopSpeech() {
+  token++
+  stopClip()
+  stopVoice()
+}
+
+// แคช <audio> ที่โหลดไว้ล่วงหน้า: การแตะครั้งแรกจะเล่นได้ทันที ไม่ต้องรอดาวน์โหลดไฟล์
+const cache = new Map()
+function getAudio(url) {
+  let a = cache.get(url)
+  if (!a) {
+    a = new Audio(url)
+    a.preload = 'auto'
+    try { a.load() } catch { /* ignore */ }
+    fetch(url).catch(() => {}) // iOS Safari ไม่โหลดล่วงหน้าตาม preload → ดึงไฟล์ผ่านเครือข่ายไว้ก่อน (เข้าแคชเบราว์เซอร์/service worker) ตอนเล่นจะเร็วขึ้น
+    cache.set(url, a)
+    if (cache.size > 90) cache.delete(cache.keys().next().value) // กันแคชโตไม่จำกัด
+  }
+  return a
+}
+const clipTexts = (item, { quiz = false } = {}) => {
+  if (item.kind !== 'letter') return [item.speak || item.ko]
+  const name = /\(([^)]+)\)/.exec(item.th || '')?.[1]
+  return [...(name && !quiz ? [name] : []), item.speak || item.ko, ...(item.ex ? [item.ex.ko] : [])]
+}
+// โหลดเสียงของไอเทมล่วงหน้า (ทั้งแบบปกติ/โจทย์ฟัง) — เรียกตอนเปิดบทเรียน/แบบทดสอบ
+export function preloadItems(items) {
+  if (!useAi()) return
+  const run = () => {
+    for (const it of items) for (const quiz of [true, false]) for (const t of clipTexts(it, { quiz })) { const f = voiceFile(teacherSpeaker(false), t); if (f) getAudio(f) }
+  }
+  if (voicesReady()) run(); else preloadVoices().then(run)
+}
+
 // เล่นไฟล์ต่อกันเป็นชุด (เว้นช่วง gap ms) · ถ้าเล่นไม่ได้ (เบราว์เซอร์ไม่อนุญาต/ไฟล์เสีย) เรียก fallback เพื่อใช้เสียงในเครื่องแทน
 function playClips(files, gap, fallback) {
   const t = ++token
@@ -23,7 +58,8 @@ function playClips(files, gap, fallback) {
   stopClip()
   const run = (i) => {
     if (t !== token || i >= files.length) return
-    const a = new Audio(files[i])
+    const a = getAudio(files[i])
+    try { a.pause(); a.currentTime = 0 } catch { /* ignore */ }
     clip = a
     a.onended = () => { if (t === token && i + 1 < files.length) setTimeout(() => run(i + 1), gap) }
     a.onerror = () => { if (t === token && i === 0) fallback() }
@@ -53,15 +89,8 @@ export function speakFor(item, opts = {}) {
   if (useAi()) {
     if (whenReady(() => speakFor(item, opts))) return
     const who = teacherSpeaker(slow)
-    const texts = []
-    if (item.kind === 'letter') {
-      const name = /\(([^)]+)\)/.exec(item.th || '')?.[1]
-      if (name && !quiz) texts.push(name)
-      texts.push(item.speak || item.ko)
-      if (item.ex) texts.push(item.ex.ko)
-    } else texts.push(item.speak || item.ko)
-    const files = texts.map((t) => voiceFile(who, t))
-    if (files.every(Boolean)) { playClips(files, slow ? 750 : 480, () => deviceSpeakFor(item, opts)); return }
+    const files = clipTexts(item, { quiz }).map((t) => voiceFile(who, t))
+    if (files.every(Boolean)) { playClips(files, slow ? 650 : quiz ? 260 : 420, () => deviceSpeakFor(item, opts)); return }
   }
   token++; stopClip()
   deviceSpeakFor(item, opts)

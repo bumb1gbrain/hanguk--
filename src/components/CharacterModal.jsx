@@ -61,7 +61,7 @@ export default function CharacterModal({ onClose }) {
   const got = state.achv || {}
 
   return (
-    <Modal onClose={onClose}>
+    <Modal onClose={onClose} closable>
       <div className="char-head">
         <Avatar outfit={player.outfit} scale={6} className="bob" />
         <div>
@@ -70,7 +70,7 @@ export default function CharacterModal({ onClose }) {
           {nr && <small className="muted">ฉายาถัดไป: <span className="ko">{nr.ko}</span> ที่ Lv.{nr.lv}</small>}
         </div>
       </div>
-      <div className="tabs tabs-wrap">
+      <div className="tabs tabs-grid">
         {TABS.map((t) => <button key={t.id} className={`tab ${tab === t.id ? 'on' : ''}`} onClick={() => setTab(t.id)}>{t.th}</button>)}
       </div>
 

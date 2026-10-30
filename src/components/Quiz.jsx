@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { speakFor } from '../game/lessonVoice.js'
+import { speakFor, stopSpeech, preloadItems } from '../game/lessonVoice.js'
 import { SpeakBtn } from './ui.jsx'
 
 const PROMPT = {
@@ -23,8 +23,12 @@ export default function Quiz({ questions, onAnswer, onFinish }) {
   const q = questions[i]
   const sayText = q ? q.item.speak || q.item.ko : ''
 
+  // โหลดเสียงของทุกข้อไว้ล่วงหน้า เพื่อให้เล่นได้ทันทีเมื่อถึงข้อนั้น · ออกจากแบบทดสอบ = หยุดเสียง
+  useEffect(() => { preloadItems(questions.map((x) => x.item)); return () => stopSpeech() }, []) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (q && q.type === 'listen') setTimeout(() => speakFor(q.item, { quiz: true }), 250)
+    if (!(q && q.type === 'listen')) return undefined
+    const t = setTimeout(() => speakFor(q.item, { quiz: true }), 120)
+    return () => clearTimeout(t)
   }, [i]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!q) return null
@@ -42,6 +46,7 @@ export default function Quiz({ questions, onAnswer, onFinish }) {
   }
 
   const next = () => {
+    stopSpeech() // ข้ามไปข้อถัดไป: ตัดเสียงเฉลยของข้อเดิม
     if (i + 1 >= questions.length) onFinish(correct, questions.length, missed)
     else { setI(i + 1); setPicked(null) }
   }
