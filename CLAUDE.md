@@ -105,3 +105,11 @@ src/
 - state: `pet.species`, `pet.bond`, `state.petBox` (ตัวที่พักในบ้าน ไม่ลดค่าสถานะ); actions `ADOPT`/`SWITCH_PET`/`PET_TAP`/`HUG`/`TRICK`
 - ความผูกพัน (`src/data/tricks.js`): เพดาน 30/วัน (`daily.bondGain`) เลื่อนระดับได้เหรียญ; คำสั่ง (앉아, 점프, 손, …) ปลดล็อกตามระดับ ได้รางวัลท่าละครั้ง/วัน
 - แอนิเมชันอยู่ใน `styles.css` (`.pa-*` บน `.pet-spot`, `.avatar-spot.hug/cheer/cmd`, `.fx-part`)
+
+## เนื้อเรื่อง (Story)
+- เนื้อหาอยู่ใน `src/data/story.js` (CHAPTERS → parts → scenes) · เพิ่มตอนใหม่ได้โดยไม่ต้องแตะโค้ด UI · `pendingPart(state)` คืนช่วงถัดไปที่เงื่อนไข `when` ครบและ `after` ดูแล้ว
+- `src/components/StoryScene.jsx`: ฉาก visual-novel (typewriter, อ่านออกเสียงเกาหลี, คำที่ได้เจอ) + `StoryBook` (เล่นซ้ำจาก Home ▸ 📖 เรื่องราว) · App เล่นอัตโนมัติเมื่อไม่มี notice ค้าง
+- state `story.seen` + action `STORY_SEEN` (ได้ 🪙15 ครั้งแรกเท่านั้น) · ข้อความรองรับ `{name}`, `{pet}`, `{sound}`, `{soundRead}`
+- Chapter 1: c1_intro (หลังสร้างตัวละคร) → c1_hatch (ไข่ฟัก) → c1_tale (ผูกพัน Lv.1, นิทาน 곶감)
+- ไข่ตัวแรกเลือกได้ตอน Onboarding (`ONBOARD.species`, ทุกสายพันธุ์ฟรี) · สีไข่ต่อสายพันธุ์อยู่ใน `EGG_PAL` (pets.js) · c1_tale เป็นฟังก์ชัน `scenes(species)` ได้นิทานประจำสายพันธุ์
+- ฉากหลังเรื่อง: `StoryBackdrop.jsx` (shop/room/night) · เรื่องเล่นก่อนป๊อปอัปแจ้งเตือนเสมอ · แถบเตือนเสียงย้ายขึ้นบนขณะดูเรื่อง (`body:has(.story)`)

@@ -71,9 +71,19 @@ function moodRows(head, mood) {
 }
 
 // ─────────── ประกอบสไปรต์ตามช่วงวัย ───────────
+// สีไข่ของแต่ละสายพันธุ์ (y = เปลือก, o = ลาย, b = เงา)
+const EGG_PAL = {
+  chick: { y: '#fff3b0', o: '#ffd23f', b: '#e0a82a' },
+  cat: { y: '#e4e6ef', o: '#8b91ab', b: '#5c607a' },
+  dog: { y: '#f6e4c0', o: '#c98a3a', b: '#8b5a2b' },
+  bunny: { y: '#fff5f8', o: '#ffb3c6', b: '#e58fa8' },
+  fox: { y: '#ffe8d4', o: '#e8602c', b: '#8a3b1b' },
+  panda: { y: '#ffffff', o: '#2a2a33', b: '#c9ccd8' },
+}
+
 export function speciesSprite(id, stage, mood) {
   const sp = SPECIES[id] || SPECIES.tiger
-  if (stage === 'egg') return { grid: PET_STAGES.egg, pal: sp.pal, dy: 0 }
+  if (stage === 'egg') return { grid: PET_STAGES.egg, pal: { ...sp.pal, ...EGG_PAL[sp.id] }, dy: 0 }
   if (!sp.head) {
     // เสือ: ใช้สไปรต์เดิม (รวมสถานะโต)
     const g = [...PET_STAGES[stage]]

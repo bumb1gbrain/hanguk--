@@ -5,7 +5,7 @@ import { suggestLesson } from './data/lessons.js'
 import { GEAR } from './data/shop.js'
 import { ACH_BY_ID } from './data/achievements.js'
 import { DEFAULT_LOOK } from './pixel/sprites.js'
-import { SPECIES } from './pixel/pets.js'
+import { SPECIES, SPECIES_LIST } from './pixel/pets.js'
 import { BOND_LEVEL_COINS } from './data/tricks.js'
 import LookEditor from './components/LookEditor.jsx'
 import { useSync } from './sync/SyncProvider.jsx'
@@ -13,6 +13,8 @@ import { canSpeak, speakSeq, getTtsPrefs, setTtsPrefs, listKoVoices, currentVoic
 import GearPreview from './components/GearPreview.jsx'
 import { GEAR_BY_ID, FOOD_BY_ID, RARITY } from './data/shop.js'
 import Home from './pages/Home.jsx'
+import StoryScene from './components/StoryScene.jsx'
+import { pendingPart } from './data/story.js'
 import Learn from './pages/Learn.jsx'
 import Routine from './pages/Routine.jsx'
 import Review from './pages/Review.jsx'
@@ -183,8 +185,10 @@ function Onboarding({ onStart }) {
   const [skipHangul, setSkipHangul] = useState(false)
   const [goal, setGoal] = useState(50)
   const [look, setLook] = useState(DEFAULT_LOOK)
+  const [species, setSpecies] = useState('tiger')
+  const sel = SPECIES[species]
   const go = () => {
-    dispatch({ type: 'ONBOARD', name: name.trim() || '나', goal, skipHangul, look })
+    dispatch({ type: 'ONBOARD', name: name.trim() || '나', goal, skipHangul, look, species })
     onStart(skipHangul)
   }
   return (
@@ -192,15 +196,28 @@ function Onboarding({ onStart }) {
       <div className="center onboard">
         <div className="row gap center-row">
           <Avatar scale={5} look={look} outfit={{ top: 'top_blue', bottom: look.gender === 'f' ? 'skirt_navy' : 'pants_navy' }} className="bob" />
-          <Pet stage="egg" scale={6} className="wobble" />
+          <Pet stage="egg" species={species} outfit={{}} scale={6} className="wobble" />
         </div>
         {sync.configured && !sync.user && (
           <button className="link" onClick={sync.signIn}>มีบัญชีอยู่แล้ว? เข้าสู่ระบบด้วย Google เพื่อกู้ความคืบหน้า</button>
         )}
         <h2>환영해요! ยินดีต้อนรับ</h2>
         <p>
-          นี่คือไข่เสือ <b>범이</b> 🐯 เรียนภาษาเกาหลีและทำกิจวัตรทุกวัน ตัวละครของคุณจะเลเวลอัป และ 범이 จะฟักออกมาแล้วโตขึ้น
+          เลือกไข่ที่อยากเลี้ยง แล้วเรียนภาษาเกาหลีและทำกิจวัตรทุกวัน ตัวละครของคุณจะเลเวลอัป และ <b>{sel.name}</b> {sel.icon} จะฟักออกมาแล้วโตขึ้น
         </p>
+        <div className="choices">
+          <small>ไข่ใบแรกของคุณ (ตัวอื่นรับเลี้ยงเพิ่มทีหลังได้)</small>
+          <div className="egg-pick">
+            {SPECIES_LIST.map((sp) => (
+              <button key={sp.id} className={`egg-opt ${species === sp.id ? 'on' : ''}`} onClick={() => setSpecies(sp.id)} aria-label={sp.th}>
+                <Pet stage="egg" species={sp.id} outfit={{}} scale={3} />
+                <b className="ko">{sp.ko}</b>
+                <small>{sp.th}</small>
+              </button>
+            ))}
+          </div>
+          <small className="muted">เสียงร้อง: <span className="ko">{sel.sound.ko}</span> ({sel.sound.read}) · ชอบกิน {FOOD_BY_ID[sel.fav]?.icon} {FOOD_BY_ID[sel.fav]?.th}</small>
+        </div>
         <label className="field">
           <span>ชื่อของคุณ (ภาษาอะไรก็ได้)</span>
           <input value={name} maxLength={10} onChange={(e) => setName(e.target.value)} placeholder="เช่น 민수 หรือ บุ๋ม" />
@@ -379,6 +396,7 @@ export default function App() {
   const [settings, setSettings] = useState(false)
   const lv = levelInfo(state.player.xp)
   const notice = state.notices[0]
+  const story = state.onboarded ? pendingPart(state) : null // ช่วงเรื่องที่ถึงเวลาเล่น: เล่นก่อนป๊อปอัปแจ้งเตือน (กันสปอยล์ เช่น ฟักไข่)
 
   return (
     <div className="app">
@@ -415,7 +433,8 @@ export default function App() {
       {lesson && <LessonView lesson={lesson} onClose={() => setLesson(null)} />}
       {settings && <Settings onClose={() => setSettings(false)} />}
       {!state.onboarded && <Onboarding onStart={(skip) => setLesson(suggestLesson(new Date(), {}, skip))} />}
-      {state.onboarded && notice && <Notice n={notice} onClose={() => dispatch({ type: 'DISMISS' })} />}
+      {story && <StoryScene key={story.id} part={story} onDone={() => dispatch({ type: 'STORY_SEEN', id: story.id })} />}
+      {state.onboarded && !story && notice && <Notice n={notice} onClose={() => dispatch({ type: 'DISMISS' })} />}
     </div>
   )
 }

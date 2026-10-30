@@ -8,6 +8,7 @@ import { ROUTINE } from '../data/routine.js'
 import { ACHIEVEMENTS } from '../data/achievements.js'
 import { DEFAULT_LOOK, GENDER_DEFAULTS, HAIR_STYLES, EYE_STYLES, SKIN_TONES, HAIR_COLORS } from '../pixel/sprites.js'
 import { SPECIES, DEFAULT_SPECIES } from '../pixel/pets.js'
+import { STORY_REWARD, PART_BY_ID } from '../data/story.js'
 import { BOND_DAILY_CAP, BOND_LEVEL_COINS, bondInfo, TRICK_BY_ID } from '../data/tricks.js'
 
 const KEY = 'hyeongbum-save-v1'
@@ -76,6 +77,7 @@ export function freshState() {
     achv: {},
     notices: [],
     onboarded: false,
+    story: { seen: {} }, // ช่วงเรื่องที่ดูแล้ว (id → เวลา)
   }
 }
 
@@ -89,7 +91,7 @@ function migrateRoom(player = {}) {
 // รวมเซฟดิบ (จาก localStorage หรือคลาวด์) เข้ากับค่าเริ่มต้น: เติมฟิลด์ใหม่ให้เซฟเก่า และกันค่าเพี้ยน
 export function hydrate(s) {
   const f = freshState()
-  return { ...f, ...s, player: { ...f.player, ...s.player, look: { ...f.player.look, ...(s.player && s.player.look) }, owned: [...new Set([...(s.player?.owned || []), ...DEFAULT_OWNED])], room: migrateRoom(s.player) }, pet: { ...f.pet, ...s.pet, outfit: { ...(s.pet?.outfit || {}) } }, petBox: Object.fromEntries(Object.entries(s.petBox || {}).filter(([id]) => SPECIES[id]).map(([id, p]) => [id, { ...freshPet(id), ...p, outfit: { ...(p.outfit || {}) } }])), daily: { ...f.daily, ...s.daily }, streak: { ...f.streak, ...s.streak }, notices: [] }
+  return { ...f, ...s, player: { ...f.player, ...s.player, look: { ...f.player.look, ...(s.player && s.player.look) }, owned: [...new Set([...(s.player?.owned || []), ...DEFAULT_OWNED])], room: migrateRoom(s.player) }, pet: { ...f.pet, ...s.pet, outfit: { ...(s.pet?.outfit || {}) } }, petBox: Object.fromEntries(Object.entries(s.petBox || {}).filter(([id]) => SPECIES[id]).map(([id, p]) => [id, { ...freshPet(id), ...p, outfit: { ...(p.outfit || {}) } }])), story: { seen: { ...(s.story?.seen || {}) } }, daily: { ...f.daily, ...s.daily }, streak: { ...f.streak, ...s.streak }, notices: [] }
 }
 
 function load() {
@@ -187,6 +189,7 @@ function step(state, a) {
       return {
         ...s,
         onboarded: true,
+        pet: SPECIES[a.species] ? freshPet(a.species) : s.pet, // ไข่ตัวแรกตามที่ผู้เล่นเลือก (ทุกสายพันธุ์ฟรี)
         player: {
           ...s.player,
           name: a.name || s.player.name,
@@ -408,6 +411,11 @@ function step(state, a) {
 
     case 'RENAME':
       return { ...s, [a.who]: { ...s[a.who], name: a.name } }
+
+    case 'STORY_SEEN': { // ดูจบช่วงเรื่องครั้งแรก: ได้เหรียญครั้งเดียว (ดูซ้ำได้แต่ไม่ได้เพิ่ม)
+      if (!PART_BY_ID[a.id] || s.story?.seen?.[a.id]) return s
+      return { ...s, story: { seen: { ...(s.story?.seen || {}), [a.id]: Date.now() } }, player: { ...s.player, coins: s.player.coins + STORY_REWARD } }
+    }
 
     case 'DISMISS':
       return { ...s, notices: s.notices.slice(1) }

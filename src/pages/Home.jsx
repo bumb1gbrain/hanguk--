@@ -17,6 +17,7 @@ import { speak, speakSeq } from '../game/tts.js'
 import { SPECIES } from '../pixel/pets.js'
 import { TRICKS, bondInfo } from '../data/tricks.js'
 import PetHouse from '../components/PetHouse.jsx'
+import StoryScene, { StoryBook } from '../components/StoryScene.jsx'
 
 function greeting(h) {
   if (h >= 5 && h < 11) return { ko: '좋은 아침이에요!', th: 'อรุณสวัสดิ์!' }
@@ -36,6 +37,8 @@ export default function Home({ openLesson, go }) {
   const [pv, setPv] = useState(null) // ไอเทมที่เปิดดูจากหน้า Home (ของเด่น)
   const [bounce, setBounce] = useState(0)
   const [houseOpen, setHouseOpen] = useState(false)
+  const [bookOpen, setBookOpen] = useState(false)
+  const [replay, setReplay] = useState(null) // ช่วงเรื่องที่กำลังเล่นซ้ำ
   const [petAnim, setPetAnim] = useState(null) // ท่าที่สัตว์เลี้ยงกำลังทำ (trick-*)
   const [avAct, setAvAct] = useState(null) // ท่าของตัวละคร: cheer | hug | cmd
   const [cmd, setCmd] = useState(null) // คำสั่งที่ตัวละครกำลังพูด (บอลลูนข้อความ)
@@ -200,6 +203,7 @@ export default function Home({ openLesson, go }) {
         <div>
           <b>{pet.name}</b> <small className="muted">· {speciesInfo.icon} {speciesInfo.ko} · {stage.ko} ({stage.th})</small>
           <button className="link house-link" onClick={() => setHouseOpen(true)}>🏠 บ้านสัตว์เลี้ยง</button>
+          <button className="link house-link" onClick={() => setBookOpen(true)}>📖 เรื่องราว</button>
           <div className="mood-line"><span className="ko">{mt.ko}</span> <small className="muted">{mt.th}</small></div>
         </div>
         <div className="bars-grid">
@@ -309,6 +313,8 @@ export default function Home({ openLesson, go }) {
         <small className="muted">ครบทั้ง {quests.length} ข้อ โบนัส +{QUEST_ALL_BONUS} 🪙</small>
       </details>
 
+      {bookOpen && !replay && <StoryBook onClose={() => setBookOpen(false)} onPlay={setReplay} />}
+      {replay && <StoryScene part={replay} replay onDone={() => setReplay(null)} />}
       {houseOpen && <PetHouse onClose={() => setHouseOpen(false)} />}
       {charOpen && <CharacterModal onClose={() => setCharOpen(false)} />}
       {pv && <PreviewModal id={pv} onClose={() => setPv(null)} />}

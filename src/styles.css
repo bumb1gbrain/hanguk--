@@ -616,7 +616,7 @@ main { flex: 1; padding: 12px 16px calc(96px + env(safe-area-inset-bottom)); ani
 .example small { opacity: .85; }
 
 /* ───── ปฏิสัมพันธ์ตัวละคร × สัตว์เลี้ยง ───── */
-.house-link { float: right; font-size: 12px; }
+.house-link { float: right; font-size: 12px; margin-left: 10px; }
 .room { overflow: hidden; }
 .avatar-spot { transition: left 0.5s steps(6); z-index: 2; }
 .pet-spot { z-index: 2; }
@@ -661,3 +661,103 @@ main { flex: 1; padding: 12px 16px calc(96px + env(safe-area-inset-bottom)); ani
 @keyframes dance { 0% { transform: translateY(0) rotate(-8deg); } 50% { transform: translateY(-10px) rotate(8deg); } 100% { transform: translateY(0) rotate(-8deg); } }
 @keyframes munch { 50% { transform: scaleY(0.92) scaleX(1.05); } }
 @media (prefers-reduced-motion: reduce) { .fx-part { animation-duration: 0.01s; } .avatar-spot.hug { animation: none; } }
+
+/* ───── เนื้อเรื่อง / cutscene ───── */
+.story { position: fixed; inset: 0; z-index: 55; display: flex; flex-direction: column; padding: env(safe-area-inset-top) 14px calc(16px + env(safe-area-inset-bottom)); cursor: pointer; animation: fadein 0.3s; transition: background 0.6s; }
+.sbg-shop { background: linear-gradient(#5b3a2a, #3a2418 70%, #2a1a10); }
+.sbg-room { background: linear-gradient(#3b3560, #2b2547 70%, #1c1832); }
+.sbg-night { background: linear-gradient(#10102a, #1b1840 60%, #2a2050); }
+.story-top { display: flex; justify-content: space-between; align-items: center; padding: 10px 2px; position: relative; z-index: 2; }
+.story-stage { flex: 1; display: flex; align-items: flex-end; justify-content: center; gap: 18px; padding-bottom: 12px; min-height: 0; }
+.st-char { transition: transform 0.2s steps(3), filter 0.2s; filter: brightness(0.7); animation: pop 0.25s steps(3); }
+.st-char.talk { filter: none; transform: translateY(-6px); }
+.story-stage:not(:has(.talk)) .st-char { filter: none; }
+.story-box { position: relative; padding: 12px 14px 22px; min-height: 130px; display: flex; flex-direction: column; gap: 6px; background: rgba(18, 15, 31, 0.92); }
+.story-name { font-size: 14px; }
+.story-ko { font-size: 22px; line-height: 1.4; min-height: 31px; }
+.caret { animation: blink 0.6s steps(2) infinite; }
+.story-sub { display: flex; flex-direction: column; gap: 2px; opacity: 0; transition: opacity 0.25s; font-size: 14px; }
+.story-sub.on { opacity: 1; }
+.story-sub .read { color: var(--accent, #a79bff); }
+.story-next { position: absolute; right: 12px; bottom: 5px; animation: blink 1.2s steps(2) infinite; }
+.story-dots { margin-top: 10px; }
+.story-end { margin: auto 0; padding: 18px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; background: rgba(18, 15, 31, 0.95); cursor: default; }
+.vocab-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.vocab-chips .chip { background: var(--panel2, #2a2342); color: inherit; border: 0; box-shadow: 0 0 0 2px var(--line); padding: 4px 8px; font: inherit; cursor: pointer; display: flex; gap: 6px; align-items: baseline; }
+.story-chap { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
+.story-row { display: flex; gap: 8px; align-items: baseline; text-align: left; background: var(--panel2, #2a2342); color: inherit; border: 0; box-shadow: 0 0 0 2px var(--line); padding: 8px 10px; font: inherit; cursor: pointer; }
+.story-row:disabled { opacity: 0.55; cursor: default; }
+@media (prefers-reduced-motion: reduce) { .st-char, .story { animation: none; } }
+
+/* ───── ฉากหลังเรื่อง ───── */
+.bd { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+.story > *:not(.bd) { position: relative; z-index: 1; }
+.bd > * { position: absolute; }
+.bd .bd-abs { position: absolute; }
+.bd-wall { inset: 0 0 34% 0; }
+.bd-wood { background: repeating-linear-gradient(90deg, #6b432a 0 22px, #5d3a24 22px 24px), #6b432a; box-shadow: inset 0 -12px 0 rgba(0, 0, 0, 0.25); }
+.bd-dots { background: radial-gradient(circle, rgba(255, 255, 255, 0.09) 2px, transparent 2.5px) 0 0 / 22px 22px, linear-gradient(#3e3665, #332c58); box-shadow: inset 0 -12px 0 rgba(0, 0, 0, 0.25); }
+.bd-floor { left: 0; right: 0; bottom: 0; height: 34%; box-shadow: inset 0 6px 0 rgba(0, 0, 0, 0.3); }
+.bd-plank { background: repeating-linear-gradient(90deg, #8a5a36 0 46px, #7a4d2c 46px 48px); }
+.bd-plank.light { background: repeating-linear-gradient(90deg, #a9794d 0 46px, #96683f 46px 48px); }
+.bd-rug { left: 14%; right: 14%; bottom: 20%; height: 14%; border-radius: 50%; opacity: 0.9; }
+.rug-shop { background: radial-gradient(ellipse, #b5453f 0 55%, #e3a24a 56% 62%, #b5453f 63%); }
+.rug-room { background: radial-gradient(ellipse, #ff8fb1 0 55%, #fff0a8 56% 62%, #ff8fb1 63%); }
+.bd-window { left: 7%; top: 11%; width: 92px; height: 104px; border: 6px solid #3a2418; background: linear-gradient(#8fd3ff, #ffe9b3); box-shadow: 0 0 0 3px #1b1424, inset 0 0 18px rgba(255, 255, 255, 0.4); }
+.bd-window::before, .bd-window::after { content: ''; position: absolute; background: #3a2418; }
+.bd-window::before { left: 50%; top: 0; bottom: 0; width: 5px; margin-left: -2.5px; }
+.bd-window::after { top: 50%; left: 0; right: 0; height: 5px; margin-top: -2.5px; }
+.bd-window.night { background: linear-gradient(#171a44, #2c2a6b); }
+.bd-sun { position: absolute; right: 8px; top: 10px; width: 20px; height: 20px; background: #fff3a8; border-radius: 50%; box-shadow: 0 0 14px #ffe27a; }
+.bd-moon { position: absolute; left: 14px; top: 14px; width: 22px; height: 22px; border-radius: 50%; background: #fff6c8; box-shadow: inset -7px -3px 0 #d8cf9a, 0 0 14px #fff6c8; }
+.bd-star { position: absolute; width: 4px; height: 4px; background: #fff; animation: twinkle 2s steps(2) infinite; }
+.bd-star.a { right: 16px; top: 20px; } .bd-star.b { right: 30px; bottom: 22px; animation-delay: 0.7s; }
+.bd-sign { right: 7%; top: 9%; padding: 6px 14px; background: #3a2418; color: #ffe2a8; font-size: 20px; text-align: center; box-shadow: 0 0 0 3px #1b1424, inset 0 0 0 2px #8a5a36; display: flex; flex-direction: column; line-height: 1.2; }
+.bd-sign small { font-size: 10px; opacity: 0.8; }
+.bd-sign::before, .bd-sign::after { content: ''; position: absolute; top: -30px; width: 3px; height: 30px; background: #2a1a12; }
+.bd-sign::before { left: 14px; } .bd-sign::after { right: 14px; }
+.bd-lantern { left: 48%; top: 0; transform: translateX(-50%); transform-origin: top center; animation: swing 3.2s ease-in-out infinite; }
+.bd-lantern::before { content: ''; position: absolute; left: 50%; top: -60px; width: 3px; height: 70px; background: #2a1a12; }
+.bd-lantern.low { left: auto; right: 9%; top: 36%; animation: none; }
+.bd-lantern.low::before { top: 40px; height: 90px; width: 5px; background: #4a3426; }
+.bd-glow { position: absolute; left: 50%; top: 50%; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%; background: radial-gradient(rgba(255, 210, 90, 0.5), transparent 70%); animation: glowpulse 2.4s ease-in-out infinite; }
+.bd-shelf { right: 6%; width: 52%; }
+.bd-shelf.s1 { top: 28%; } .bd-shelf.s2 { top: 42%; }
+.bd-items { display: flex; justify-content: space-around; align-items: flex-end; padding: 0 8px; }
+.bd-shelf i { display: block; height: 8px; background: #a0643c; box-shadow: 0 3px 0 #4a2c18; }
+.bd-lampglow { right: 6%; bottom: 22%; width: 150px; height: 150px; background: radial-gradient(rgba(255, 220, 120, 0.35), transparent 70%); animation: glowpulse 3s ease-in-out infinite; }
+.bd-abs.fr { right: 12%; top: 12%; } .bd-abs.ck { left: 44%; top: 8%; }
+.bd-abs.pl { left: 5%; bottom: 30%; } .bd-abs.lp { right: 8%; bottom: 31%; }
+/* ลานบ้านยามค่ำ */
+.bd-stars { inset: 0 0 45% 0; background: radial-gradient(#fff 1px, transparent 1.5px) 0 0 / 53px 47px, radial-gradient(#cfd6ff 1px, transparent 1.5px) 20px 26px / 71px 61px; animation: twinkle 3s steps(2) infinite; }
+.bd-bigmoon { right: 12%; top: 9%; width: 64px; height: 64px; border-radius: 50%; background: #fff6c8; box-shadow: inset -14px -6px 0 #e2d9a3, 0 0 40px rgba(255, 246, 200, 0.6); }
+.bd-hill { left: -10%; right: -10%; border-radius: 50% 50% 0 0; }
+.bd-hill.h1 { bottom: 30%; height: 22%; background: #1a2250; }
+.bd-hill.h2 { bottom: 26%; height: 18%; left: 20%; right: -30%; background: #232c66; }
+.bd-hanok { left: 4%; bottom: 33%; width: 150px; height: 100px; }
+.bd-hanok .roof { position: absolute; left: -8px; right: -8px; top: 0; height: 36px; background: #20233f; clip-path: polygon(10% 100%, 0 70%, 30% 20%, 50% 0, 70% 20%, 100% 70%, 90% 100%); }
+.bd-hanok .wall { position: absolute; left: 6px; right: 6px; top: 34px; bottom: 0; background: #3b2a3f; }
+.bd-hanok .wall b { position: absolute; left: 50%; top: 14px; width: 38px; height: 34px; margin-left: -19px; background: #ffd98a; box-shadow: 0 0 22px rgba(255, 217, 138, 0.7), inset 0 0 0 3px #4a3426; }
+.bd-tree { right: 3%; bottom: 33%; width: 70px; height: 120px; }
+.bd-tree i:first-child { position: absolute; left: 50%; bottom: 0; width: 10px; height: 60px; margin-left: -5px; background: #3a2a2a; }
+.bd-tree i:last-child { position: absolute; left: 0; right: 0; top: 0; height: 76px; border-radius: 50%; background: #1c3b3a; box-shadow: 0 0 0 4px #14302f; }
+.bd-ground { left: 0; right: 0; bottom: 0; height: 34%; background: linear-gradient(#2b4a38, #1f3a2c); box-shadow: inset 0 6px 0 #3a6048; }
+.bd-fly { left: calc(10% + var(--i) * 12%); bottom: calc(34% + (var(--i) * 37 % 60) * 1px); width: 5px; height: 5px; background: #fff7a8; box-shadow: 0 0 10px 3px rgba(255, 247, 168, 0.7); animation: firefly 4s ease-in-out infinite; animation-delay: calc(var(--i) * -0.7s); }
+/* ไข่แตก */
+.egg-wrap { position: relative; }
+.egg-crack { position: absolute; left: 0; top: 0; z-index: 2; }
+.egg-glow { position: absolute; inset: -22px; border-radius: 50%; background: radial-gradient(rgba(255, 250, 200, 0.85), transparent 68%); animation: glowpulse 0.8s ease-in-out infinite; }
+.egg-wrap .fx-part { bottom: 60%; animation-iteration-count: infinite; animation-duration: 1.6s; z-index: 3; }
+.egg-wrap .s0 { left: -8px; } .egg-wrap .s1 { right: -8px; animation-delay: 0.5s; } .egg-wrap .s2 { left: 40%; animation-delay: 1s; }
+/* เลือกไข่ตอนเริ่มเกม */
+.egg-pick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.egg-opt { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px; background: var(--bg2); color: inherit; border: 0; box-shadow: 0 0 0 2px var(--line); cursor: pointer; font: inherit; }
+.egg-opt small { font-size: 10px; opacity: 0.75; }
+.egg-opt.on { box-shadow: 0 0 0 3px var(--accent); background: var(--accent-bg, #3b3470); }
+/* แถบเตือนเสียงไม่บังบทพูดระหว่างดูเรื่อง */
+body:has(.story) .tts-toast { bottom: auto; top: 44px; }
+@keyframes twinkle { 50% { opacity: 0.35; } }
+@keyframes glowpulse { 50% { opacity: 0.55; transform: scale(1.1); } }
+@keyframes swing { 50% { transform: translateX(-50%) rotate(3deg); } 0%, 100% { transform: translateX(-50%) rotate(-3deg); } }
+@keyframes firefly { 0%, 100% { transform: translate(0, 0); opacity: 0.2; } 50% { transform: translate(18px, -26px); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .bd *, .bd { animation: none !important; } }
