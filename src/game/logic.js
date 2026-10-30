@@ -188,9 +188,11 @@ export function buildQuiz(items, pool, { n = 6, canListen = true } = {}) {
     const base = pool.filter((x) => x.id !== it.id && x[field] && x[field] !== it[field])
     const sameLesson = base.filter((x) => x.lesson === it.lesson)
     const sameKind = base.filter((x) => x.kind === it.kind)
-    const others = sameLesson.length >= 3 ? sameLesson : sameKind.length >= 3 ? sameKind : base
+    const others = letter ? base : sameLesson.length >= 3 ? sameLesson : sameKind.length >= 3 ? sameKind : base // ตัวอักษร: ให้รูปแบบตัวเลือกมาก่อนบทเดียวกัน
     const len = (o) => String(o[field]).length
-    const rank = (o) => (o.kind === it.kind ? 0 : 8) + Math.min(Math.abs(len(o) - len(it)), 12) * 0.6 + Math.random() * 3
+    // รูปแบบข้อความ (มี "/" หรือวงเล็บ) ต้องเหมือนกัน ไม่งั้นตัวเลือกที่หน้าตาแปลกกว่าเพื่อนจะเป็นเฉลย
+    const shape = (o) => (/ \//.test(String(o[field])) ? 1 : 0) + (/\(/.test(String(o[field])) ? 2 : 0)
+    const rank = (o) => (o.kind === it.kind ? 0 : 8) + Math.min(Math.abs(len(o) - len(it)), 12) * 0.6 + (shape(o) === shape(it) ? 0 : 6) + (letter && o.lesson !== it.lesson ? 1.5 : 0) + Math.random() * 3
     const seen = new Set([it[field]])
     const distract = []
     for (const o of [...others].sort((x, y) => rank(x) - rank(y))) {
