@@ -8,14 +8,14 @@ import { voiceKey, voiceText } from './voiceKey.js'
 // rate = ตัวคูณความเร็วจากที่ผู้เล่นตั้งไว้ · pitch = ระดับเสียง (1 = ปกติ) · slot = ลำดับเสียงในเครื่องที่แจกให้ (ถ้ามีหลายเสียง)
 export const VOICE_PROFILES = {
   narr: { th: 'ผู้เล่าเรื่อง', rate: 0.95, pitch: 0.95, slot: 0, st: { voice: 'M3', speed: 1.0 } },
-  gran: { th: 'คุณยาย', rate: 0.78, pitch: 0.65, slot: 1, st: { voice: 'F5', speed: 0.85 } },
-  vendor: { th: 'แม่ค้า', rate: 1.05, pitch: 1.0, slot: 4, st: { voice: 'F4', speed: 1.1 } },
+  gran: { th: 'คุณยาย', rate: 0.78, pitch: 0.65, slot: 1, st: { voice: 'F5', speed: 0.9 } },
+  vendor: { th: 'แม่ค้า', rate: 1.05, pitch: 1.0, slot: 4, st: { voice: 'F4', speed: 1.0 } },
   teacher: { th: 'ครู (เนื้อหาบทเรียน)', rate: 1, pitch: 1, slot: 0, st: { voice: 'F1', speed: 0.9 } },
   teacher_slow: { th: 'ครู (แบบช้า)', rate: 0.7, pitch: 1, slot: 0, st: { voice: 'F1', speed: 0.7 } },
   teacher_m: { th: 'ครูมินจุน (เนื้อหาบทเรียน)', rate: 1, pitch: 1, slot: 0, st: { voice: 'M4', speed: 0.9 } },
   teacher_m_slow: { th: 'ครูมินจุน (แบบช้า)', rate: 0.7, pitch: 1, slot: 0, st: { voice: 'M4', speed: 0.7 } },
-  me_f: { th: 'ผู้เล่น (หญิง)', rate: 1.0, pitch: 1.25, slot: 2, st: { voice: 'F2', speed: 1.05 } },
-  me_m: { th: 'ผู้เล่น (ชาย)', rate: 1.0, pitch: 0.85, slot: 3, st: { voice: 'M1', speed: 1.05 } },
+  me_f: { th: 'ผู้เล่น (หญิง)', rate: 1.0, pitch: 1.25, slot: 2, st: { voice: 'F2', speed: 1.0 } },
+  me_m: { th: 'ผู้เล่น (ชาย)', rate: 1.0, pitch: 0.85, slot: 3, st: { voice: 'M1', speed: 1.0 } },
 }
 
 export const speakerKey = (who, gender) => (who === 'me' ? (gender === 'f' ? 'me_f' : 'me_m') : who)

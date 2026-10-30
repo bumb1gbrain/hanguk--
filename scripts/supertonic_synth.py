@@ -2,11 +2,15 @@
 # ใช้โดย scripts/gen-voice.mjs:  python supertonic_synth.py jobs.json out_dir
 #
 # โมเดลนี้สุ่มผลลัพธ์ทุกครั้ง (บางเทคมี "หางสั่นๆ" หรือเสียงลากต่อท้าย) และเสียงเบากว่าเสียงสังเคราะห์ในเบราว์เซอร์
-# จึงทำ 3 อย่างต่อไฟล์: 1) สร้างหลายเทคแล้วคัดเทคที่สะอาดสุด 2) ตัดช่วงเงียบ/หางที่เกิน + เฟดท้าย 3) ปรับความดังให้สม่ำเสมอ
+# และบางเทค "ตกคำ" (กลืนคำ/พยางค์บางตัวหาย) จึงทำ 4 อย่างต่อไฟล์:
+# 1) สร้างหลายเทค 2) ถอดเสียงกลับเป็นข้อความด้วย Whisper แล้วคัดเทคที่พูดครบตรงกับข้อความที่สุด (พยางค์เดี่ยวใช้ Whisper ไม่ได้ จึงคัดจากความสะอาดของเสียง)
+# 3) ตัดช่วงเงียบ/หางที่เกิน + เฟดท้าย 4) ปรับความดังให้สม่ำเสมอ
 import json, sys, os
 import numpy as np
 from supertonic import TTS
 from supertonic.core import Style
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import voice_asr as ASR
 
 jobs = json.load(open(sys.argv[1]))
 out = sys.argv[2]
@@ -86,17 +90,30 @@ def post(x, a, single):
     pad = np.zeros(int(0.04 * SR), dtype=y.dtype)
     return np.concatenate([pad, y, pad]).astype(np.float32)
 
+report = {}
 for i, j in enumerate(jobs, 1):
     single = bool(j.get('single'))
-    takes = int(j.get('takes', 8 if single else 5))
+    takes = int(j.get('takes', 8))
     best = None
-    for _ in range(takes):
+    for n in range(takes):
         wav, _d = tts.synthesize(j['text'], voice_style=style(j['voice']), lang='ko', speed=j.get('speed', 1.0))
         x = np.asarray(wav, dtype=np.float32).flatten()
         a = analyse(x)
-        sc = score(a, single)
+        art = score(a, single)
+        rec = None
+        y = post(x, a, single)  # ตรวจจากเสียงที่ผ่านการตัด/ปรับความดังแล้ว (ตรงกับที่ผู้เล่นจะได้ยินจริง)
+        if not single:
+            rec = ASR.recall(j['text'], ASR.heard(y, SR))
+            sc = (1 - rec) * 100 + art
+        else:
+            sc = art
         if best is None or sc < best[0]:
-            best = (sc, x, a)
-    y = post(best[1], best[2], single)
+            best = (sc, y, a, rec, n + 1)
+        if rec is not None and rec >= 0.95 and a['extra'] == 0:
+            break  # พูดครบและสะอาดแล้ว ไม่ต้องลองเทคต่อ
+    y = best[1]
     tts.save_audio(y, os.path.join(out, j['key'] + '.wav'))
-    print(f"[{i}/{len(jobs)}] {j['speaker']} {j['voice']} {j['text']}  (เลือกจาก {takes} เทค, คะแนน {best[0]:.1f})", flush=True)
+    report[j['key']] = dict(text=j['text'], recall=best[3], takes_used=best[4])
+    rtxt = '' if best[3] is None else f', ครบ {best[3]:.0%}'
+    print(f"[{i}/{len(jobs)}] {j['speaker']} {j['voice']} {j['text']}  (ใช้ {best[4]}/{takes} เทค{rtxt})", flush=True)
+json.dump(report, open(os.path.join(out, '_report.json'), 'w'), ensure_ascii=False)

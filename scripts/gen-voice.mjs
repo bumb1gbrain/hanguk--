@@ -22,6 +22,7 @@ const VENV = path.resolve('.voice-venv')
 const PY = path.join(VENV, 'bin', 'python')
 const run = process.argv.includes('--run')
 const prune = process.argv.includes('--prune')
+const onlyArg = process.argv.find((a) => a.startsWith('--only='))?.split('=')[1]?.split(',') // จำกัดเฉพาะ speaker เหล่านี้ เช่น --only=narr,gran
 const force = process.argv.includes('--force') // สร้างใหม่ทุกไฟล์ (เช่น หลังปรับการคัดเทค/ความดัง)
 
 const fill = (t, sp) => t.replaceAll('{pet}', sp.name).replaceAll('{sound}', sp.sound.ko)
@@ -60,10 +61,12 @@ for (const it of ALL_ITEMS) {
 for (const r of ROUTINE) lessonTexts.add(r.ko)
 for (const t of lessonTexts) for (const { speaker } of Object.values(TEACHERS)) { addJob(speaker, t); addJob(`${speaker}_slow`, t) }
 const otherTexts = new Set([...FOODS.map((f) => f.ko), ...GEAR.map((g) => g.ko), ...TRICKS.map((t) => t.ko), ...Object.values(MOOD_TEXT).map((m) => m.ko), '행복해요', '사랑해', '스트릭 보호'])
-for (const t of otherTexts) for (const { speaker } of Object.values(TEACHERS)) addJob(speaker, t, { takes: 3 })
+for (const t of otherTexts) for (const { speaker } of Object.values(TEACHERS)) addJob(speaker, t, { takes: 5 })
 
 const chars = [...jobs.values()].reduce((n, j) => n + j.text.length, 0)
 console.log(`บรรทัดเสียง ${jobs.size} ไฟล์ · ${chars} ตัวอักษร`)
+const dump = process.argv.find((a) => a.startsWith('--dump-jobs='))?.split('=')[1] // ส่งรายการ {คีย์: {speaker, text}} ให้สคริปต์ตรวจเสียง
+if (dump) fs.writeFileSync(dump, JSON.stringify(Object.fromEntries(jobs)))
 if (!run) { console.log('ยังไม่ได้สร้าง (เพิ่ม --run เพื่อสร้างจริง)'); process.exit(0) }
 
 const sh = (cmd, args, opts = {}) => {
@@ -79,7 +82,7 @@ if (!fs.existsSync(PY)) {
 fs.mkdirSync(OUT, { recursive: true })
 const hasAac = spawnSync('afconvert', ['-h'], { stdio: 'ignore' }).error == null // macOS: บีบอัดเป็น m4a ให้ไฟล์เล็ก
 const ext = hasAac ? 'm4a' : 'wav'
-const todo = [...jobs].filter(([k]) => force || !fs.existsSync(path.join(OUT, `${k}.${ext}`)))
+const todo = [...jobs].filter(([k, j]) => (!onlyArg || onlyArg.includes(j.speaker)) && (force || !fs.existsSync(path.join(OUT, `${k}.${ext}`))))
 console.log(`ต้องสร้างใหม่ ${todo.length} บรรทัด (มีอยู่แล้ว ${jobs.size - todo.length})`)
 
 if (todo.length) {
@@ -91,6 +94,13 @@ if (todo.length) {
     const wav = path.join(tmp, `${key}.wav`)
     if (hasAac) sh('afconvert', ['-f', 'm4af', '-d', 'aac', '-b', '56000', wav, path.join(OUT, `${key}.m4a`)])
     else fs.copyFileSync(wav, path.join(OUT, `${key}.wav`))
+  }
+  const rp = path.join(tmp, '_report.json') // รายงานความครบของแต่ละไฟล์ (Whisper) รวมเก็บไว้ที่ voice-lab/
+  if (fs.existsSync(rp)) {
+    fs.mkdirSync('voice-lab', { recursive: true })
+    const dst = path.resolve('voice-lab/voice_report.json')
+    const old = fs.existsSync(dst) ? JSON.parse(fs.readFileSync(dst, 'utf8')) : {}
+    fs.writeFileSync(dst, JSON.stringify({ ...old, ...JSON.parse(fs.readFileSync(rp, 'utf8')) }, null, 1))
   }
   fs.rmSync(tmp, { recursive: true, force: true })
 }
