@@ -14,7 +14,8 @@ import GearPreview from '../components/GearPreview.jsx'
 import { GEAR_BY_ID } from '../data/shop.js'
 import { salePrice, FEATURED_DISCOUNT } from '../game/loot.js'
 import { speak, speakSeq } from '../game/tts.js'
-import { SPECIES } from '../pixel/pets.js'
+import { SPECIES, SPECIES_LIST } from '../pixel/pets.js'
+import { ALL_PARTS } from '../data/story.js'
 import { TRICKS, bondInfo } from '../data/tricks.js'
 import PetHouse from '../components/PetHouse.jsx'
 import StoryScene, { StoryBook } from '../components/StoryScene.jsx'
@@ -202,9 +203,19 @@ export default function Home({ openLesson, go }) {
       <section className="card pixel-box">
         <div>
           <b>{pet.name}</b> <small className="muted">· {speciesInfo.icon} {speciesInfo.ko} · {stage.ko} ({stage.th})</small>
-          <button className="link house-link" onClick={() => setHouseOpen(true)}>🏠 บ้านสัตว์เลี้ยง</button>
-          <button className="link house-link" onClick={() => setBookOpen(true)}>📖 เรื่องราว</button>
           <div className="mood-line"><span className="ko">{mt.ko}</span> <small className="muted">{mt.th}</small></div>
+        </div>
+        <div className="quick-menu">
+          <button className="menu-tile" onClick={() => setHouseOpen(true)}>
+            <span className="mt-ico">🏠</span>
+            <span className="mt-txt"><b>บ้านสัตว์เลี้ยง</b><small>สะสมแล้ว {1 + Object.keys(state.petBox || {}).length}/{SPECIES_LIST.length} ตัว</small></span>
+            <span className="chev">▶</span>
+          </button>
+          <button className="menu-tile" onClick={() => setBookOpen(true)}>
+            <span className="mt-ico">📖</span>
+            <span className="mt-txt"><b>เรื่องราว</b><small>ดูแล้ว {Object.keys(state.story?.seen || {}).length}/{ALL_PARTS.length} ช่วง</small></span>
+            <span className="chev">▶</span>
+          </button>
         </div>
         <div className="bars-grid">
           <Bar label="อิ่ม" icon="🍙" value={pet.full} color="var(--orange)" />

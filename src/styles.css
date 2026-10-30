@@ -616,7 +616,7 @@ main { flex: 1; padding: 12px 16px calc(96px + env(safe-area-inset-bottom)); ani
 .example small { opacity: .85; }
 
 /* ───── ปฏิสัมพันธ์ตัวละคร × สัตว์เลี้ยง ───── */
-.house-link { float: right; font-size: 12px; margin-left: 10px; }
+
 .room { overflow: hidden; }
 .avatar-spot { transition: left 0.5s steps(6); z-index: 2; }
 .pet-spot { z-index: 2; }
@@ -761,3 +761,18 @@ body:has(.story) .tts-toast { bottom: auto; top: 44px; }
 @keyframes swing { 50% { transform: translateX(-50%) rotate(3deg); } 0%, 100% { transform: translateX(-50%) rotate(-3deg); } }
 @keyframes firefly { 0%, 100% { transform: translate(0, 0); opacity: 0.2; } 50% { transform: translate(18px, -26px); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .bd *, .bd { animation: none !important; } }
+
+/* ───── ปุ่ม/เมนูแทนลิงก์ตัวหนังสือ ───── */
+.pixel-btn.ghost { background: transparent; color: var(--muted, #b9b3d6); box-shadow: 0 0 0 2px var(--line); }
+.study-extra { justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+.sp-skip { margin-top: 6px; }
+.skip-pill { padding: 5px 12px; background: rgba(18, 15, 31, 0.7); color: #fff; border: 0; box-shadow: 0 0 0 2px var(--line); font: inherit; font-size: 13px; cursor: pointer; }
+.quick-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0 4px; }
+.menu-tile { display: flex; align-items: center; gap: 8px; padding: 8px 10px; text-align: left; background: var(--panel2); color: inherit; border: 0; font: inherit; cursor: pointer; box-shadow: 0 0 0 2px var(--line), inset 0 -3px 0 rgba(0, 0, 0, 0.25); transition: transform 0.05s; }
+.menu-tile:active { transform: translateY(2px); }
+.mt-ico { font-size: 22px; }
+.mt-txt { display: flex; flex-direction: column; line-height: 1.25; flex: 1; min-width: 0; }
+.mt-txt b { font-size: 13.5px; }
+.mt-txt small { font-size: 11px; color: var(--muted, #b9b3d6); }
+.menu-tile .chev { opacity: 0.6; font-size: 11px; }
+.st-prop { align-self: flex-end; padding-bottom: 4px; filter: none !important; }

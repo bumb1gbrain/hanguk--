@@ -199,7 +199,7 @@ function Onboarding({ onStart }) {
           <Pet stage="egg" species={species} outfit={{}} scale={6} className="wobble" />
         </div>
         {sync.configured && !sync.user && (
-          <button className="link" onClick={sync.signIn}>มีบัญชีอยู่แล้ว? เข้าสู่ระบบด้วย Google เพื่อกู้ความคืบหน้า</button>
+          <button className="pixel-btn small" onClick={sync.signIn}>☁ มีบัญชีแล้ว? เข้าสู่ระบบด้วย Google</button>
         )}
         <h2>환영해요! ยินดีต้อนรับ</h2>
         <p>

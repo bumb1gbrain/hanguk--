@@ -228,7 +228,7 @@ export function SyncProvider({ children }) {
           <div className="col gap conflict-actions">
             <button className="pixel-btn primary" onClick={() => resolveConflict('cloud')}>ใช้เซฟบนคลาวด์</button>
             <button className="pixel-btn" onClick={() => resolveConflict('local')}>ใช้เซฟเครื่องนี้ (ทับคลาวด์)</button>
-            <button className="link" onClick={() => resolveConflict('later')}>ตัดสินใจทีหลัง</button>
+            <button className="pixel-btn ghost" onClick={() => resolveConflict('later')}>ตัดสินใจทีหลัง</button>
           </div>
         </Modal>
       )}

@@ -323,7 +323,7 @@ export default function SpeakingGame({ onClose }) {
           </div>
         )}
 
-        {phase !== 'result' && <button className="link sp-skip" onClick={next}>ข้ามประโยคนี้ ▶</button>}
+        {phase !== 'result' && <button className="pixel-btn small ghost sp-skip" onClick={next}>ข้ามประโยคนี้ ▶</button>}
         <details className="sp-privacy">
           <summary>🔒 เสียงของคุณไปที่ไหน?</summary>
           <p>การฟังใช้ระบบรู้จำเสียงของเบราว์เซอร์ (Chrome ใช้ของ Google, Safari ใช้ของ Apple) แอปนี้ไม่ได้อัดหรือเก็บเสียงของคุณไว้เลย</p>

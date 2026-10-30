@@ -16,6 +16,8 @@ const GRAN_PAL = { k: '#3a2a3a', g: '#d8d8e6', s: '#f4cfa8', e: '#1b1424', p: '#
 // รอยร้าวของไข่ (ขนาดเท่ากริดไข่ 12×12) วางทับบนไข่
 const CRACK = ['............', '............', '............', '.....k.w....', '....kk.k....', '.....kk.....', '....k.kk....', '.....k.k....', '............', '............', '............', '............']
 
+const NOTEBOOK = ['kkkkkkkk', 'kbbbbbbk', 'kbwwwwbk', 'kbwkkwbk', 'kbwwwwbk', 'kbbbbbbk', 'kkkkkkkk']
+
 const WHO = { narr: null, gran: { ko: '할머니', th: 'คุณยาย' }, me: null, pet: null }
 
 // ขั้นตอนฉาก: พิมพ์ข้อความทีละตัว แตะเพื่อข้าม/ไปต่อ · อ่านออกเสียงบรรทัดเกาหลีอัตโนมัติ
@@ -60,13 +62,14 @@ export default function StoryScene({ part, onDone, replay = false }) {
       <StoryBackdrop bg={sc?.bg || scenes[scenes.length - 1].bg || 'room'} />
       <div className="story-top">
         <small className="ko">{part.title} · {part.th}</small>
-        <button className="link" onClick={(e) => { e.stopPropagation(); onDone() }}>ข้าม ⏭</button>
+        <button className="skip-pill" onClick={(e) => { e.stopPropagation(); onDone() }}>ข้าม ⏭</button>
       </div>
       {!end && (
         <>
           <div className="story-stage">
             {show.gran && <div className={`st-char ${who === 'gran' ? 'talk' : ''}`}><Sprite grid={GRAN} pal={GRAN_PAL} outline="#1b1424" scale={7} className="bob" /></div>}
             {show.avatar && <div className={`st-char ${who === 'me' ? 'talk' : ''}`}><Avatar scale={6} mood={sc.pose === 'happy' ? 'happy' : 'normal'} className="idle" /></div>}
+            {show.book && <div className="st-char st-prop"><Sprite grid={NOTEBOOK} pal={{ k: '#1b1424', b: '#4f8cff', w: '#fff' }} scale={5} className="bob" /></div>}
             {show.egg && (
               <div className={`st-char egg-wrap ${show.egg}`}>
                 {show.egg === 'crack' && <><span className="egg-glow" /><Sprite grid={CRACK} pal={{ k: '#2a1a12', w: '#fffbe0' }} scale={6} className="egg-crack" /></>}

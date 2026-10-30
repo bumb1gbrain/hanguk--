@@ -116,8 +116,10 @@ export default function LessonView({ lesson, onClose }) {
               <button className="pixel-btn primary" onClick={startQuiz}>เริ่มแบบทดสอบ ⚔️</button>
             )}
           </div>
-          <button className="link" onClick={startQuiz}>ข้ามไปทำแบบทดสอบ</button>
-          {lesson.group !== 'daily' && <button className="link" onClick={() => setSyl(true)}>🧩 ลองเกมประกอบพยางค์ก่อน</button>}
+          <div className="row gap study-extra">
+            {lesson.group !== 'daily' && <button className="pixel-btn small" onClick={() => setSyl(true)}>🧩 เกมประกอบพยางค์</button>}
+            <button className="pixel-btn small ghost" onClick={startQuiz}>⏩ ข้ามไปทำแบบทดสอบ</button>
+          </div>
         </div>
       )}
 
