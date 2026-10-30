@@ -11,6 +11,7 @@ from supertonic import TTS
 from supertonic.core import Style
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import voice_asr as ASR
+import av, fractions
 
 jobs = json.load(open(sys.argv[1]))
 out = sys.argv[2]
@@ -91,10 +92,54 @@ def post(x, a, single):
     pad = np.zeros(int(0.04 * SR), dtype=y.dtype)
     return np.concatenate([pad, y, pad]).astype(np.float32)
 
+def read_audio(path):
+    c = av.open(path)
+    rs = av.AudioResampler(format='flt', layout='mono', rate=SR)
+    parts = []
+    for fr in c.decode(audio=0):
+        for r in rs.resample(fr):
+            parts.append(r.to_ndarray().flatten())
+    for r in rs.resample(None):
+        parts.append(r.to_ndarray().flatten())
+    c.close()
+    return np.concatenate(parts).astype(np.float32)
+
+def stretch(x, factor):
+    # factor > 1 = ช้าลง ไม่เปลี่ยนระดับเสียง (atempo ของ ffmpeg ผ่าน PyAV)
+    g = av.filter.Graph()
+    src = g.add_abuffer(format='flt', sample_rate=SR, layout='mono', time_base=fractions.Fraction(1, SR))
+    f = g.add('atempo', str(1.0 / factor))
+    snk = g.add('abuffersink')
+    src.link_to(f); f.link_to(snk); g.configure()
+    frame = av.AudioFrame.from_ndarray(x.reshape(1, -1), format='flt', layout='mono')
+    frame.sample_rate = SR; frame.pts = 0
+    src.push(frame); src.push(None)
+    out_parts = []
+    while True:
+        try:
+            out_parts.append(snk.pull().to_ndarray().flatten())
+        except (av.error.EOFError, av.error.BlockingIOError):
+            break
+    return np.concatenate(out_parts).astype(np.float32)
+
 rpath = os.path.join(out, '_report.json')
 report = json.load(open(rpath)) if resume and os.path.exists(rpath) else {}
 for i, j in enumerate(jobs, 1):
     if resume and os.path.exists(os.path.join(out, j['key'] + '.wav')):
+        continue
+    if j.get('src'):  # เสียงช้า: ยืดคลิปปกติที่คัดไว้แล้ว (ไม่สังเคราะห์ใหม่)
+        if not os.path.exists(j['src']):
+            print(f"[{i}/{len(jobs)}] ข้าม {j['speaker']} {j['text']}: ยังไม่มีคลิปปกติ", flush=True)
+            continue
+        y = stretch(read_audio(j['src']), float(j['stretch']))
+        f_out = int(0.07 * SR)
+        y[-f_out:] *= np.linspace(1, 0, f_out)
+        pk = np.abs(y).max()
+        if pk > PEAK_LIMIT:
+            y = np.tanh(y / PEAK_LIMIT) * PEAK_LIMIT
+        tts.save_audio(y.astype(np.float32), os.path.join(out, j['key'] + '.wav'))
+        report[j['key']] = dict(text=j['text'], stretched=float(j['stretch']))
+        print(f"[{i}/{len(jobs)}] {j['speaker']} {j['text']}  (ยืด ×{j['stretch']})", flush=True)
         continue
     single = bool(j.get('single'))
     takes = int(j.get('takes', 8))

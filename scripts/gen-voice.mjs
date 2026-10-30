@@ -60,7 +60,11 @@ for (const it of ALL_ITEMS) {
   }
 }
 for (const r of ROUTINE) lessonTexts.add(r.ko)
-for (const t of lessonTexts) for (const { speaker } of Object.values(TEACHERS)) { addJob(speaker, t); addJob(`${speaker}_slow`, t) }
+// เสียง "ช้า" = ยืดเวลาคลิปปกติของข้อความเดียวกัน (ไม่ใช้พารามิเตอร์ speed ของโมเดล: วัดแล้วทำให้ได้แค่ช่วงเงียบยาวขึ้น ส่วนคำพูดแทบไม่ช้าลง)
+for (const t of lessonTexts) for (const { speaker } of Object.values(TEACHERS)) {
+  addJob(speaker, t)
+  addJob(`${speaker}_slow`, t, { from: voiceKey(speaker, voiceText(t)), stretch: /^[가-힣]$/.test(voiceText(t)) ? 1.3 : 1.5 })
+}
 const otherTexts = new Set([...FOODS.map((f) => f.ko), ...GEAR.map((g) => g.ko), ...TRICKS.map((t) => t.ko), ...Object.values(MOOD_TEXT).map((m) => m.ko), '행복해요', '사랑해', '스트릭 보호'])
 for (const t of otherTexts) for (const { speaker } of Object.values(TEACHERS)) addJob(speaker, t, { takes: 5 })
 
@@ -97,7 +101,7 @@ console.log(`ต้องสร้างใหม่ ${todo.length} บรรท
 if (todo.length) {
   const tmp = resume ? path.resolve('.voice-staging') : fs.mkdtempSync(path.join(os.tmpdir(), 'hb-voice-'))
   fs.mkdirSync(tmp, { recursive: true })
-  const list = todo.map(([key, j]) => ({ key, speaker: j.speaker, text: j.text, voice: VOICE_PROFILES[j.speaker].st.voice, speed: VOICE_PROFILES[j.speaker].st.speed, single: !!j.single, takes: j.takes }))
+  const list = todo.map(([key, j]) => ({ key, speaker: j.speaker, text: j.text, voice: VOICE_PROFILES[j.speaker].st.voice, speed: VOICE_PROFILES[j.speaker].st.speed, single: !!j.single, takes: j.takes, src: j.from ? path.join(OUT, `${j.from}.${ext}`) : undefined, stretch: j.stretch }))
   fs.writeFileSync(path.join(tmp, 'jobs.json'), JSON.stringify(list))
   sh(PY, [path.resolve('scripts/supertonic_synth.py'), path.join(tmp, 'jobs.json'), tmp, ...(resume ? ['--resume'] : [])])
   for (const { key } of list) {
