@@ -4,13 +4,14 @@ import { speak, stopSpeaking, voicesForCast } from './tts.js'
 import { playCry } from './cry.js'
 import { voiceKey } from './voiceKey.js'
 
+// st = เสียงสำเร็จรูปจาก Supertonic 2 (M1–M5, F1–F5 หรือผสม 'M1+F5@0.5') ใช้ตอนสร้างไฟล์ด้วย scripts/gen-voice.mjs · เพิ่มตัวละครใหม่ = เพิ่มบรรทัดเดียว
 // rate = ตัวคูณความเร็วจากที่ผู้เล่นตั้งไว้ · pitch = ระดับเสียง (1 = ปกติ) · slot = ลำดับเสียงในเครื่องที่แจกให้ (ถ้ามีหลายเสียง)
 export const VOICE_PROFILES = {
-  narr: { th: 'ผู้เล่าเรื่อง', rate: 0.95, pitch: 0.95, slot: 0, azure: 'ko-KR-BongJinNeural' },
-  gran: { th: 'คุณยาย', rate: 0.78, pitch: 0.65, slot: 1, azure: 'ko-KR-SoonBokNeural' },
-  vendor: { th: 'แม่ค้า', rate: 1.05, pitch: 1.0, slot: 4, azure: 'ko-KR-SunHiNeural' },
-  me_f: { th: 'ผู้เล่น (หญิง)', rate: 1.0, pitch: 1.25, slot: 2, azure: 'ko-KR-JiMinNeural' },
-  me_m: { th: 'ผู้เล่น (ชาย)', rate: 1.0, pitch: 0.85, slot: 3, azure: 'ko-KR-InJoonNeural' },
+  narr: { th: 'ผู้เล่าเรื่อง', rate: 0.95, pitch: 0.95, slot: 0, st: { voice: 'M3', speed: 1.0 } },
+  gran: { th: 'คุณยาย', rate: 0.78, pitch: 0.65, slot: 1, st: { voice: 'F5', speed: 0.85 } },
+  vendor: { th: 'แม่ค้า', rate: 1.05, pitch: 1.0, slot: 4, st: { voice: 'F4', speed: 1.1 } },
+  me_f: { th: 'ผู้เล่น (หญิง)', rate: 1.0, pitch: 1.25, slot: 2, st: { voice: 'F2', speed: 1.05 } },
+  me_m: { th: 'ผู้เล่น (ชาย)', rate: 1.0, pitch: 0.85, slot: 3, st: { voice: 'M1', speed: 1.05 } },
 }
 
 export const speakerKey = (who, gender) => (who === 'me' ? (gender === 'f' ? 'me_f' : 'me_m') : who)
@@ -18,7 +19,9 @@ export const speakerKey = (who, gender) => (who === 'me' ? (gender === 'f' ? 'me
 let manifest = null // { key: 'path.mp3' }
 let manifestLoading = null
 export function preloadVoices() {
-  if (manifest || manifestLoading || typeof fetch === 'undefined') return manifestLoading
+  if (manifest) return Promise.resolve()
+  if (manifestLoading) return manifestLoading
+  if (typeof fetch === 'undefined') { manifest = {}; return Promise.resolve() }
   manifestLoading = fetch('/voice/manifest.json', { cache: 'no-cache' })
     .then((r) => (r.ok ? r.json() : {}))
     .then((m) => { manifest = m && typeof m === 'object' ? m : {} })
@@ -32,16 +35,42 @@ export function stopVoice() {
   stopSpeaking()
 }
 
+// ชื่อเสียงในเครื่องที่เหมาะกับตัวละคร (ตัวพิมพ์เล็ก/ใหญ่ไม่สำคัญ) เรียงตามความชอบ
+// Apple: Grandma/Eddy/Flo/Reed/Rocko/Sandy/Shelley/Yuna (ต้องดาวน์โหลดเพิ่มในการตั้งค่าระบบ) · Edge: SunHi (หญิง) InJoon/Hyunsu (ชาย)
+const PREFER = {
+  narr: ['reed', 'hyunsu', 'rocko', 'injoon'],
+  gran: ['grandma', 'sandy', 'shelley', 'sunhi'],
+  me_m: ['eddy', 'injoon', 'rocko', 'grandpa'],
+  me_f: ['flo', 'sunhi', 'shelley', 'yuna'],
+  vendor: ['sandy', 'shelley', 'sunhi', 'flo'],
+}
+export function chooseVoice(key, cast, taken = []) {
+  if (!cast.length) return null
+  const low = cast.map((v) => v.name.toLowerCase())
+  for (const want of PREFER[key] || []) {
+    const i = low.findIndex((n) => n.includes(want))
+    if (i >= 0 && !taken.includes(cast[i])) return cast[i]
+  }
+  const p = VOICE_PROFILES[key] || VOICE_PROFILES.narr
+  return cast.length > 1 ? cast[p.slot % cast.length] : cast[0]
+}
+
 function viaSpeech(key, text, onDone) {
   const p = VOICE_PROFILES[key] || VOICE_PROFILES.narr
-  const cast = voicesForCast()
-  const voice = cast.length > 1 ? cast[p.slot % cast.length] : cast[0] || null
+  const voice = chooseVoice(key, voicesForCast())
   // ถ้ามีหลายเสียงในเครื่อง แต่ละคนใช้คนละเสียง · ถ้ามีเสียงเดียว ใช้ระดับเสียง/ความเร็วแยกให้ต่างกัน
   speak(text, undefined, { pitch: p.pitch, voice, rateMul: p.rate }, onDone)
 }
 
 // who: narr | gran | me | pet · คืน 'cry' | 'audio' | 'speech' บอกว่าใช้เสียงแบบไหน (ใช้ทดสอบ)
-export function playLine({ who, text, gender, species, onDone }) {
+let lineToken = 0
+export function playLine(args) {
+  const token = ++lineToken
+  if (!manifest) { // บรรทัดแรกอาจมาก่อนโหลดรายการไฟล์เสียงเสร็จ → รอแล้วค่อยเล่น (ถ้ายังเป็นบรรทัดล่าสุด)
+    preloadVoices().then(() => { if (token === lineToken) playLine(args) })
+    return 'pending'
+  }
+  const { who, text, gender, species, onDone } = args
   stopVoice()
   if (who === 'pet') { const ok = playCry(species); if (ok) { setTimeout(() => onDone?.(), 700); return 'cry' } }
   const key = speakerKey(who === 'pet' ? 'narr' : who, gender)

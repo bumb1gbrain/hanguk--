@@ -172,6 +172,7 @@ export function StoryBook({ onClose, onPlay }) {
           </div>
         ))}
         <small className="muted">ตอนต่อไปกำลังมา… 🌙</small>
+        <small className="muted">🎙 เสียงพากย์สร้างด้วย AI (Supertonic 2)</small>
         <button className="pixel-btn" onClick={onClose}>ปิด</button>
       </div>
     </div>

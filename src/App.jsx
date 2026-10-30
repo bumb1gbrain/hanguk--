@@ -290,6 +290,7 @@ function VoiceSettings() {
       )}
       <button className="pixel-btn small" onClick={() => speakSeq(['가', '카', '까', '자', '차', '어', '오', '으', '우'], { gap: 650 })}>▶ ทดสอบเสียง (가 카 까 · 자 차 · 어 오 · 으 우)</button>
       <small className="muted">ถ้าฟังคู่เสียงใกล้กันไม่ออก ลองเลือก "ช้า" หรือเปลี่ยนเสียงผู้อ่าน · ในบทเรียนมีปุ่ม 🐢 ฟังแบบช้า</small>
+      <small className="muted">🎙 เสียงพากย์ในฉากเรื่องราวสร้างด้วย AI (Supertonic 2, สัญญาอนุญาต OpenRAIL-M) ไม่ใช่เสียงมนุษย์จริง</small>
     </div>
   )
 }

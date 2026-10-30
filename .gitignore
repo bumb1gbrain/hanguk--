@@ -7,3 +7,5 @@ _to_delete/
 # local env (Supabase keys)
 .env.local
 .env*.local
+voice-lab/
+.voice-venv/
