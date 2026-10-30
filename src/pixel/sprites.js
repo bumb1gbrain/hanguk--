@@ -33,6 +33,27 @@ export const AVATAR = [
 export const AVATAR_SLEEPY = { 6: '...ssssssssss...', 7: '...seessssees...' }
 export const AVATAR_HAPPY = { 6: '...ssessssess...', 7: '...sesesseses...' }
 
+// ── ฐานตามเพศ: ชาย = ไหล่กว้าง กรามเหลี่ยม มีคิ้ว / หญิง = ไหล่แคบ เอวคอด คางเรียว ขนตา แก้มแดง ──
+const withRows = (rows) => AVATAR.map((r, i) => rows[i] ?? r)
+const AVATAR_M = withRows({
+  5: '...sshsssshss...', 8: '...ssssssssss...', 11: '....ssssssss....',
+  12: '...cccccccccc...', 13: '..cccccccccccc..',
+})
+const AVATAR_F = withRows({
+  5: '...sesssssses...', 8: '...srrssssrrs...', 10: '.....ssssss.....', 11: '......ssss......',
+  13: '...cccccccccc...', 14: '...cccccccccc...', 15: '....cccccccc....', 16: '...sccccccccs...',
+})
+export const avatarBase = (gender) => (gender === 'f' ? AVATAR_F : AVATAR_M)
+
+// เสื้อถูกออกแบบมาให้พอดีลำตัวกว้าง: ตัวหญิงตัดส่วนที่ล้นออกนอกลำตัวที่แคบกว่า (แถว 12-16) เพื่อให้เสื้อพอดีตัว
+export function fitToBody(ov, base, lo = 12, hi = 16) {
+  if (!ov?.grid) return ov
+  const cut = (row, r) => (r < lo || r > hi || !base[r] ? row : [...row].map((ch, i) => (base[r][i] === '.' ? '.' : ch)).join(''))
+  const g = ov.grid
+  const grid = Array.isArray(g) ? g.map((row, r) => cut(row, r)) : Object.fromEntries(Object.entries(g).map(([r, row]) => [r, cut(row, Number(r))]))
+  return { ...ov, grid }
+}
+
 export const AVATAR_PAL = {
   h: '#3b2a24', s: '#ffd9b8', e: '#1b1424', r: '#ff9aa8', m: '#c2475d',
   c: '#4f8cff', p: '#2f3a5c', b: '#1f1b2e', k: '#1b1424', w: '#ffffff',
@@ -66,6 +87,18 @@ export const HAIR_STYLES = {
   bob: { th: 'บ็อบ', grid: { 1: '.....hhhhhh.....', 2: '....hhhhhhhh....', 3: '...hhhhhhhhhh...', 4: '...hh......hh...', 5: '..hhh......hhh..', 6: '..hh........hh..', 7: '..hh........hh..', 8: '...hh......hh...' } },
   ponytail: { th: 'ผมหางม้า', grid: { 1: '.....hhhhhh.....', 2: '....hhhhhhhh....', 3: '...hhhhhhhhhh...', 4: '...hh......hhh..', 5: '...h........hhh.', 6: '.............hhh', 7: '.............hh.', 8: '..............h.' } },
 }
+// ทรงผมแยกตามเพศ: g = 'm' | 'f' | 'any' (ทรงกลางใช้ได้ทั้งสองเพศ)
+const HAIR_G = { short: 'any', bob: 'any', spiky: 'm', buzz: 'm', long: 'f', ponytail: 'f' }
+Object.entries(HAIR_G).forEach(([id, g]) => { HAIR_STYLES[id].g = g })
+Object.assign(HAIR_STYLES, {
+  sidepart: { th: 'แสกข้าง', g: 'm', grid: { 1: '.....hhhhhh.....', 2: '....hhhhhhhh....', 3: '...hhhhhhhhhh...', 4: '...hhhhhh..hh...', 5: '...hhh......h...' } },
+  messy: { th: 'ยุ่งๆ', g: 'm', grid: { 0: '....h.h..h.h....', 1: '...hhhhhhhhhh...', 2: '..hhhhhhhhhhhh..', 3: '...hhhhhhhhhh...', 4: '...hh.hh..hhh...', 5: '...h........h...' } },
+  twin: { th: 'ผมแกละ', g: 'f', grid: { 1: '.....hhhhhh.....', 2: '....hhhhhhhh....', 3: '...hhhhhhhhhh...', 4: '..hhh......hhh..', 5: '.hhh........hhh.', 6: '.hh..........hh.', 7: '.hh..........hh.', 8: '..h..........h..' } },
+  bun: { th: 'มวยผม', g: 'f', grid: { 0: '.....hhhhhh.....', 1: '....hhhhhhhh....', 2: '.....hhhhhh.....', 3: '...hhhhhhhhhh...', 4: '...hh......hh...', 5: '...h........h...' } },
+  bangs: { th: 'ยาวม้าหน้า', g: 'f', grid: { 1: '.....hhhhhh.....', 2: '....hhhhhhhh....', 3: '...hhhhhhhhhh...', 4: '...hhhhhhhhhh...', 5: '..hhh......hhh..', 6: '..hh........hh..', 7: '..hh........hh..', 8: '..hh........hh..', 9: '..hhh......hhh..', 10: '...hh......hh...' } },
+})
+export const hairFor = (gender) => Object.entries(HAIR_STYLES).filter(([, h]) => h.g === 'any' || h.g === gender)
+
 export const EYE_STYLES = {
   dot: { th: 'ตาเรียว', rows: {} },
   round: { th: 'ตากลม', rows: { 6: '...sswesswess...', 7: '...sseesseess...' } }, // w = ประกายตา

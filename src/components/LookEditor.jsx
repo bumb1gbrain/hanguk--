@@ -1,4 +1,4 @@
-import { SKIN_TONES, HAIR_COLORS, HAIR_STYLES, EYE_STYLES, GENDER_DEFAULTS } from '../pixel/sprites.js'
+import { SKIN_TONES, HAIR_COLORS, EYE_STYLES, GENDER_DEFAULTS, hairFor } from '../pixel/sprites.js'
 
 // ตัวแก้ไขหน้าตา: เพศ / สีผิว / ทรงผม / สีผม / ตา — ควบคุมจากภายนอก (look, onChange)
 export default function LookEditor({ look, onChange }) {
@@ -28,7 +28,7 @@ export default function LookEditor({ look, onChange }) {
       <div className="look-row">
         <small>ทรงผม</small>
         <div className="look-opts">
-          {Object.entries(HAIR_STYLES).map(([id, h]) => (
+          {hairFor(look.gender).map(([id, h]) => (
             <button key={id} className={`choice ${look.hair === id ? 'on' : ''}`} onClick={() => set({ hair: id })}>{h.th}</button>
           ))}
         </div>

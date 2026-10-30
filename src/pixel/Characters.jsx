@@ -1,7 +1,7 @@
 import Sprite from './Sprite.jsx'
 import { useGame } from '../game/store.jsx'
 import {
-  AVATAR, AVATAR_PAL, AVATAR_SLEEPY, AVATAR_HAPPY, TOP_COLORS, OVERLAYS,
+  avatarBase, fitToBody, AVATAR_PAL, AVATAR_SLEEPY, AVATAR_HAPPY, TOP_COLORS, OVERLAYS,
   SKIN_TONES, HAIR_COLORS, HAIR_STYLES, EYE_STYLES, DEFAULT_LOOK, GENDER_DEFAULTS,
   ROOM_SPRITES,
 } from './sprites.js'
@@ -14,7 +14,9 @@ const SLOT_ORDER = ['top', 'bottom', 'shoes', 'late', 'back', 'neck', 'face', 'g
 export function Avatar({ outfit = {}, look, mood = 'normal', scale = 6, className }) {
   const ctx = useGame()
   const lk = { ...DEFAULT_LOOK, ...(look || ctx?.state?.player?.look || {}) }
-  const grid = [...AVATAR]
+  const female = lk.gender === 'f'
+  const base = avatarBase(lk.gender)
+  const grid = [...base]
   const eyes = EYE_STYLES[lk.eyes] || EYE_STYLES.dot
   for (const [r, row] of Object.entries(eyes.rows)) grid[r] = row
   const swap = mood === 'sleepy' ? AVATAR_SLEEPY : mood === 'happy' ? AVATAR_HAPPY : null
@@ -25,11 +27,11 @@ export function Avatar({ outfit = {}, look, mood = 'normal', scale = 6, classNam
   // ผมวาดก่อน แล้วค่อยซ้อนเสื้อ/กางเกง/รองเท้า/เป้/เครื่องประดับ/หมวก ตามลำดับ
   const layers = [{ grid: (HAIR_STYLES[lk.hair] || HAIR_STYLES.short).grid, pal: { h: hairC } }]
   const withSkin = (ov) => ({ ...ov, pal: { s: skin, ...ov.pal } })
-  const topOv = OVERLAYS[outfit.top]
+  const topOv = female ? fitToBody(OVERLAYS[outfit.top], base) : OVERLAYS[outfit.top]
   for (const slot of SLOT_ORDER) {
     if (slot === 'late') { if (topOv?.late) layers.push(withSkin(topOv)); continue }
     const id = outfit[slot] || (slot === 'bottom' ? GENDER_DEFAULTS[lk.gender === 'f' ? 'f' : 'm'].bottom : null)
-    const ov = OVERLAYS[id]
+    const ov = slot === 'top' ? topOv : OVERLAYS[id]
     if (!ov || (slot === 'top' && ov.late)) continue
     layers.push(withSkin(ov))
   }
