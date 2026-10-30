@@ -1,7 +1,7 @@
 // อ่านออกเสียงภาษาเกาหลีด้วย Web Speech API (ทำงานออฟไลน์ได้ถ้าเครื่องมีเสียงเกาหลี)
 const PREF_KEY = 'hb-tts'
 // source: 'ai' = ไฟล์เสียงครู (Supertonic) ถ้ามี ไม่มีก็ใช้เสียงในเครื่อง · 'device' = เสียงในเครื่องเท่านั้น
-const DEFAULT_PREFS = { voice: null, rate: 0.85, source: 'ai' }
+const DEFAULT_PREFS = { voice: null, rate: 0.85, source: 'ai', teacher: 'hana' }
 let prefs = { ...DEFAULT_PREFS }
 try { prefs = { ...DEFAULT_PREFS, ...JSON.parse(localStorage.getItem(PREF_KEY) || '{}') } } catch { /* ignore */ }
 

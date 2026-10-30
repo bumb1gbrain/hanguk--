@@ -1,13 +1,15 @@
 // เสียงอ่านของเนื้อหาบทเรียนและข้อความทั่วไปในแอป: ใช้เสียงครู (Supertonic, ไฟล์สำเร็จรูป) ถ้ามี ไม่มีก็ถอยไปใช้ Web Speech ในเครื่อง
 // ผู้เล่นเลือกแหล่งเสียงได้ใน ⚙ ตั้งค่า (tts prefs: source = 'ai' | 'device')
 import { speak as deviceSpeak, speakFor as deviceSpeakFor, speakSeq as deviceSpeakSeq, getTtsPrefs } from './tts.js'
-import { preloadVoices, voiceFile, voicesReady, stopVoice } from './voices.js'
+import { preloadVoices, voiceFile, voicesReady, stopVoice, TEACHERS, DEFAULT_TEACHER } from './voices.js'
 
 if (typeof window !== 'undefined') preloadVoices() // โหลดรายการไฟล์เสียงไว้ก่อน จะได้เล่นได้ทันทีตอนผู้เล่นแตะ
 
 let token = 0
 let clip = null
 const useAi = () => getTtsPrefs().source !== 'device'
+// ชื่อ speaker ของครูที่ผู้เล่นเลือก (ไม่พบ → ครูเริ่มต้น)
+const teacherSpeaker = (slow) => `${(TEACHERS[getTtsPrefs().teacher] || TEACHERS[DEFAULT_TEACHER]).speaker}${slow ? '_slow' : ''}`
 const SLOW_BELOW = 0.7 // โค้ดเดิมเรียก speak(text, 0.55) สำหรับปุ่มช้า → ตีความว่า "ช้า"
 
 function stopClip() {
@@ -37,7 +39,7 @@ export function speak(text, rate) {
   if (useAi()) {
     if (whenReady(() => speak(text, rate))) return
     const slow = typeof rate === 'number' && rate < SLOW_BELOW
-    const f = voiceFile(slow ? 'teacher_slow' : 'teacher', text)
+    const f = voiceFile(teacherSpeaker(slow), text)
     if (f) { playClips([f], 0, () => deviceSpeak(text, rate)); return }
   }
   token++; stopClip()
@@ -50,7 +52,7 @@ export function speakFor(item, opts = {}) {
   const { slow = false, quiz = false } = opts
   if (useAi()) {
     if (whenReady(() => speakFor(item, opts))) return
-    const who = slow ? 'teacher_slow' : 'teacher'
+    const who = teacherSpeaker(slow)
     const texts = []
     if (item.kind === 'letter') {
       const name = /\(([^)]+)\)/.exec(item.th || '')?.[1]
@@ -70,7 +72,7 @@ export function speakSeq(parts, opts = {}) {
   if (!parts?.length) return
   if (useAi()) {
     if (whenReady(() => speakSeq(parts, opts))) return
-    const files = parts.map((t) => voiceFile(opts.slow ? 'teacher_slow' : 'teacher', t))
+    const files = parts.map((t) => voiceFile(teacherSpeaker(opts.slow), t))
     if (files.every(Boolean)) { playClips(files, opts.gap ?? (opts.slow ? 750 : 480), () => deviceSpeakSeq(parts, opts)); return }
   }
   token++; stopClip()

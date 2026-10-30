@@ -10,6 +10,7 @@ import { BOND_LEVEL_COINS } from './data/tricks.js'
 import LookEditor from './components/LookEditor.jsx'
 import { useSync } from './sync/SyncProvider.jsx'
 import { speakSeq } from './game/lessonVoice.js'
+import { TEACHERS, DEFAULT_TEACHER } from './game/voices.js'
 import { canSpeak, speakSeq as deviceSeq, getTtsPrefs, setTtsPrefs, listKoVoices, currentVoiceName } from './game/tts.js'
 import GearPreview from './components/GearPreview.jsx'
 import { GEAR_BY_ID, FOOD_BY_ID, RARITY } from './data/shop.js'
@@ -274,17 +275,20 @@ function VoiceSettings() {
   const update = (patch) => { setTtsPrefs(patch); setPrefs(getTtsPrefs()) }
   const active = prefs.voice || currentVoiceName()
   const teacher = prefs.source !== 'device'
+  const cur = TEACHERS[prefs.teacher] ? prefs.teacher : DEFAULT_TEACHER
   return (
     <div className="choices">
       <small>🔊 เสียงอ่านภาษาเกาหลี</small>
       <div className="row gap">
-        <button className={`choice ${teacher ? 'on' : ''}`} onClick={() => update({ source: 'ai' })}>🎓 ครูฮานา</button>
+        {Object.entries(TEACHERS).map(([id, t]) => (
+          <button key={id} className={`choice ${teacher && cur === id ? 'on' : ''}`} onClick={() => update({ source: 'ai', teacher: id })}>{t.icon} {t.th}</button>
+        ))}
         <button className={`choice ${!teacher ? 'on' : ''}`} onClick={() => update({ source: 'device' })}>📱 เสียงของเครื่อง</button>
       </div>
       {teacher ? (
         <>
-          <small className="muted"><span className="ko">하나 선생님</span> อ่านให้ฟังเหมือนกันทุกเครื่อง · ข้อความที่ครูยังไม่ได้อัดจะใช้เสียงของเครื่องแทน</small>
-          <button className="pixel-btn small" onClick={() => speakSeq(['가', '카', '자', '차', '어', '오', '으', '우'], { gap: 650 })}>▶ ฟังเสียงครูฮานา</button>
+          <small className="muted"><span className="ko">{TEACHERS[cur].ko}</span> อ่านให้ฟังเหมือนกันทุกเครื่อง · ข้อความที่ครูยังไม่ได้อัดจะใช้เสียงของเครื่องแทน</small>
+          <button className="pixel-btn small" onClick={() => speakSeq(['가', '카', '자', '차', '어', '오', '으', '우'], { gap: 650 })}>▶ ฟังเสียง{TEACHERS[cur].th}</button>
         </>
       ) : (
         <>
@@ -304,7 +308,7 @@ function VoiceSettings() {
           <button className="pixel-btn small" onClick={() => deviceSeq(['가', '카', '까', '자', '차', '어', '오', '으', '우'], { gap: 650 })}>▶ ทดสอบเสียงของเครื่อง</button>
         </>
       )}
-      <small className="muted">🎙 เสียงครูฮานาและเสียงตัวละครในเรื่องสร้างด้วย AI (Supertonic 2, OpenRAIL-M) ไม่ใช่เสียงมนุษย์จริง</small>
+      <small className="muted">🎙 เสียงครูและเสียงตัวละครในเรื่องสร้างด้วย AI (Supertonic 2, OpenRAIL-M) ไม่ใช่เสียงมนุษย์จริง</small>
     </div>
   )
 }

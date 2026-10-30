@@ -9,7 +9,7 @@ import path from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { ALL_PARTS, linesOf } from '../src/data/story.js'
 import { SPECIES_LIST } from '../src/pixel/pets.js'
-import { VOICE_PROFILES } from '../src/game/voices.js'
+import { VOICE_PROFILES, TEACHERS } from '../src/game/voices.js'
 import { voiceKey, voiceText } from '../src/game/voiceKey.js'
 import { ALL_ITEMS } from '../src/data/lessons.js'
 import { ROUTINE } from '../src/data/routine.js'
@@ -58,9 +58,9 @@ for (const it of ALL_ITEMS) {
   }
 }
 for (const r of ROUTINE) lessonTexts.add(r.ko)
-for (const t of lessonTexts) { addJob('teacher', t); addJob('teacher_slow', t) }
+for (const t of lessonTexts) for (const { speaker } of Object.values(TEACHERS)) { addJob(speaker, t); addJob(`${speaker}_slow`, t) }
 const otherTexts = new Set([...FOODS.map((f) => f.ko), ...GEAR.map((g) => g.ko), ...TRICKS.map((t) => t.ko), ...Object.values(MOOD_TEXT).map((m) => m.ko), '행복해요', '사랑해', '스트릭 보호'])
-for (const t of otherTexts) addJob('teacher', t, { takes: 3 })
+for (const t of otherTexts) for (const { speaker } of Object.values(TEACHERS)) addJob(speaker, t, { takes: 3 })
 
 const chars = [...jobs.values()].reduce((n, j) => n + j.text.length, 0)
 console.log(`บรรทัดเสียง ${jobs.size} ไฟล์ · ${chars} ตัวอักษร`)

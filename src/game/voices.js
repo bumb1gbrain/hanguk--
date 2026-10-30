@@ -12,6 +12,8 @@ export const VOICE_PROFILES = {
   vendor: { th: 'แม่ค้า', rate: 1.05, pitch: 1.0, slot: 4, st: { voice: 'F4', speed: 1.1 } },
   teacher: { th: 'ครู (เนื้อหาบทเรียน)', rate: 1, pitch: 1, slot: 0, st: { voice: 'F1', speed: 0.9 } },
   teacher_slow: { th: 'ครู (แบบช้า)', rate: 0.7, pitch: 1, slot: 0, st: { voice: 'F1', speed: 0.7 } },
+  teacher_m: { th: 'ครูมินจุน (เนื้อหาบทเรียน)', rate: 1, pitch: 1, slot: 0, st: { voice: 'M4', speed: 0.9 } },
+  teacher_m_slow: { th: 'ครูมินจุน (แบบช้า)', rate: 0.7, pitch: 1, slot: 0, st: { voice: 'M4', speed: 0.7 } },
   me_f: { th: 'ผู้เล่น (หญิง)', rate: 1.0, pitch: 1.25, slot: 2, st: { voice: 'F2', speed: 1.05 } },
   me_m: { th: 'ผู้เล่น (ชาย)', rate: 1.0, pitch: 0.85, slot: 3, st: { voice: 'M1', speed: 1.05 } },
 }
@@ -93,3 +95,10 @@ export function playLine(args) {
   viaSpeech(key, text, onDone)
   return 'speech'
 }
+
+// ครูผู้สอน (เสียงอ่านเนื้อหาบทเรียน) — เพิ่มครูใหม่: เพิ่มโปรไฟล์ `<id>` และ `<id>_slow` ข้างบน แล้วเพิ่มที่นี่ จากนั้นรัน npm run voice -- --run
+export const TEACHERS = {
+  hana: { th: 'ครูฮานา', ko: '하나 선생님', icon: '👩‍🏫', speaker: 'teacher' },
+  minjun: { th: 'ครูมินจุน', ko: '민준 선생님', icon: '👨‍🏫', speaker: 'teacher_m' },
+}
+export const DEFAULT_TEACHER = 'hana'
