@@ -14,6 +14,7 @@ import voice_asr as ASR
 
 jobs = json.load(open(sys.argv[1]))
 out = sys.argv[2]
+resume = '--resume' in sys.argv  # ข้ามไฟล์ที่สร้างเสร็จแล้วในโฟลเดอร์ out (ใช้ต่อจากที่ค้างไว้เมื่อโดนขัดจังหวะ)
 tts = TTS(model='supertonic-2', auto_download=True)
 cache = {}
 SR = 44100
@@ -90,8 +91,11 @@ def post(x, a, single):
     pad = np.zeros(int(0.04 * SR), dtype=y.dtype)
     return np.concatenate([pad, y, pad]).astype(np.float32)
 
-report = {}
+rpath = os.path.join(out, '_report.json')
+report = json.load(open(rpath)) if resume and os.path.exists(rpath) else {}
 for i, j in enumerate(jobs, 1):
+    if resume and os.path.exists(os.path.join(out, j['key'] + '.wav')):
+        continue
     single = bool(j.get('single'))
     takes = int(j.get('takes', 8))
     best = None
@@ -115,5 +119,6 @@ for i, j in enumerate(jobs, 1):
     tts.save_audio(y, os.path.join(out, j['key'] + '.wav'))
     report[j['key']] = dict(text=j['text'], recall=best[3], takes_used=best[4])
     rtxt = '' if best[3] is None else f', ครบ {best[3]:.0%}'
+    json.dump(report, open(rpath, 'w'), ensure_ascii=False)  # เซฟรายงานทุกไฟล์ เผื่อถูกขัดจังหวะ
     print(f"[{i}/{len(jobs)}] {j['speaker']} {j['voice']} {j['text']}  (ใช้ {best[4]}/{takes} เทค{rtxt})", flush=True)
-json.dump(report, open(os.path.join(out, '_report.json'), 'w'), ensure_ascii=False)
+json.dump(report, open(rpath, 'w'), ensure_ascii=False)

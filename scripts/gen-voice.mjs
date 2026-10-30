@@ -23,6 +23,7 @@ const PY = path.join(VENV, 'bin', 'python')
 const run = process.argv.includes('--run')
 const prune = process.argv.includes('--prune')
 const onlyArg = process.argv.find((a) => a.startsWith('--only='))?.split('=')[1]?.split(',') // จำกัดเฉพาะ speaker เหล่านี้ เช่น --only=narr,gran
+const resume = process.argv.includes('--resume') // เก็บงานระหว่างทางไว้ที่ .voice-staging แล้วรันซ้ำคำสั่งเดิมเพื่อทำต่อจากจุดที่ค้าง (ใช้กับงานยาว ๆ เช่น --force)
 const force = process.argv.includes('--force') // สร้างใหม่ทุกไฟล์ (เช่น หลังปรับการคัดเทค/ความดัง)
 
 const fill = (t, sp) => t.replaceAll('{pet}', sp.name).replaceAll('{sound}', sp.sound.ko)
@@ -86,10 +87,11 @@ const todo = [...jobs].filter(([k, j]) => (!onlyArg || onlyArg.includes(j.speake
 console.log(`ต้องสร้างใหม่ ${todo.length} บรรทัด (มีอยู่แล้ว ${jobs.size - todo.length})`)
 
 if (todo.length) {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'hb-voice-'))
+  const tmp = resume ? path.resolve('.voice-staging') : fs.mkdtempSync(path.join(os.tmpdir(), 'hb-voice-'))
+  fs.mkdirSync(tmp, { recursive: true })
   const list = todo.map(([key, j]) => ({ key, speaker: j.speaker, text: j.text, voice: VOICE_PROFILES[j.speaker].st.voice, speed: VOICE_PROFILES[j.speaker].st.speed, single: !!j.single, takes: j.takes }))
   fs.writeFileSync(path.join(tmp, 'jobs.json'), JSON.stringify(list))
-  sh(PY, [path.resolve('scripts/supertonic_synth.py'), path.join(tmp, 'jobs.json'), tmp])
+  sh(PY, [path.resolve('scripts/supertonic_synth.py'), path.join(tmp, 'jobs.json'), tmp, ...(resume ? ['--resume'] : [])])
   for (const { key } of list) {
     const wav = path.join(tmp, `${key}.wav`)
     if (hasAac) sh('afconvert', ['-f', 'm4af', '-d', 'aac', '-b', '56000', wav, path.join(OUT, `${key}.m4a`)])

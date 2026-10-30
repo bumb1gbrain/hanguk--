@@ -9,3 +9,4 @@ _to_delete/
 .env*.local
 voice-lab/
 .voice-venv/
+.voice-staging/
