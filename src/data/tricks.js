@@ -16,12 +16,12 @@ export function bondInfo(bond = 0) {
 // anim = ชื่อแอนิเมชันใน styles.css (trick-*) · level = ระดับความผูกพันที่ต้องถึง
 export const TRICKS = [
   { id: 'sit', ko: '앉아', read: 'อันจา', th: 'นั่ง', level: 0, anim: 'sit', icon: '🪑' },
-  { id: 'jump', ko: '점프', read: 'ชอมพือ', th: 'กระโดด', level: 0, anim: 'jump', icon: '⬆️' },
+  { id: 'jump', ko: '점프', read: 'จอมพือ', th: 'กระโดด', level: 0, anim: 'jump', icon: '⬆️' },
   { id: 'paw', ko: '손', read: 'ซน', th: 'ยื่นมือ (จับมือ)', level: 1, anim: 'paw', icon: '🤝' },
-  { id: 'down', ko: '엎드려', read: 'ออบดือรยอ', th: 'หมอบ', level: 1, anim: 'down', icon: '⬇️' },
+  { id: 'down', ko: '엎드려', read: 'ออบตือรยอ', th: 'หมอบ', level: 1, anim: 'down', icon: '⬇️' },
   { id: 'spin', ko: '돌아', read: 'โดรา', th: 'หมุนตัว', level: 2, anim: 'spin', icon: '🔄' },
-  { id: 'roll', ko: '굴러', read: 'คุลลอ', th: 'กลิ้ง', level: 2, anim: 'roll', icon: '🌀' },
+  { id: 'roll', ko: '굴러', read: 'กุลลอ', th: 'กลิ้ง', level: 2, anim: 'roll', icon: '🌀' },
   { id: 'dance', ko: '춤춰', read: 'ชุมชวอ', th: 'เต้น', level: 3, anim: 'dance', icon: '💃' },
-  { id: 'sleep', ko: '자', read: 'ชา', th: 'นอน', level: 4, anim: 'nap', icon: '😴' },
+  { id: 'sleep', ko: '자', read: 'จา', th: 'นอน', level: 4, anim: 'nap', icon: '😴' },
 ]
 export const TRICK_BY_ID = Object.fromEntries(TRICKS.map((t) => [t.id, t]))
