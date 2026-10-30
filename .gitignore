@@ -3,3 +3,7 @@ dist
 .DS_Store
 .claude/
 _to_delete/
+
+# local env (Supabase keys)
+.env.local
+.env*.local

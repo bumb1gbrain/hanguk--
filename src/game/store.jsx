@@ -77,13 +77,17 @@ function migrateRoom(player = {}) {
   return room
 }
 
+// รวมเซฟดิบ (จาก localStorage หรือคลาวด์) เข้ากับค่าเริ่มต้น: เติมฟิลด์ใหม่ให้เซฟเก่า และกันค่าเพี้ยน
+export function hydrate(s) {
+  const f = freshState()
+  return { ...f, ...s, player: { ...f.player, ...s.player, look: { ...f.player.look, ...(s.player && s.player.look) }, owned: [...new Set([...(s.player?.owned || []), ...DEFAULT_OWNED])], room: migrateRoom(s.player) }, pet: { ...f.pet, ...s.pet, outfit: { ...(s.pet?.outfit || {}) } }, daily: { ...f.daily, ...s.daily }, streak: { ...f.streak, ...s.streak }, notices: [] }
+}
+
 function load() {
   try {
     const raw = localStorage.getItem(KEY)
     if (!raw) return freshState()
-    const s = JSON.parse(raw)
-    const f = freshState()
-    return { ...f, ...s, player: { ...f.player, ...s.player, look: { ...f.player.look, ...(s.player && s.player.look) }, owned: [...new Set([...(s.player?.owned || []), ...DEFAULT_OWNED])], room: migrateRoom(s.player) }, pet: { ...f.pet, ...s.pet, outfit: { ...(s.pet?.outfit || {}) } }, daily: { ...f.daily, ...s.daily }, streak: { ...f.streak, ...s.streak }, notices: [] }
+    return hydrate(JSON.parse(raw))
   } catch {
     return freshState()
   }
@@ -343,6 +347,9 @@ function step(state, a) {
 
     case 'RESET':
       return freshState()
+
+    case 'REPLACE': // เซฟจากคลาวด์มาแทนที่ทั้งก้อน (ผ่าน hydrate เพื่อเติมฟิลด์ใหม่และกันค่าเพี้ยน)
+      return a.data && typeof a.data === 'object' ? hydrate(a.data) : s
 
     default:
       return s

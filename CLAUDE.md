@@ -29,6 +29,7 @@ src/
   game/stt.js         SpeechRecognition wrapper (ko-KR): interim results for the live transcript, stop on speech end, one silent auto-restart on 'no-speech', Thai error messages · canListen()
   game/speech_score.js evaluateSpeech(text, alts, level): syllable alignment (Needleman–Wunsch) → ops match/sub/miss/extra with per-part diffs (lead/vowel/tail) + Thai explanations & articulation tips; score = 0.6·jamo similarity (ortho vs phonetic, 연음·구개음화) + 0.4·syllable-match − extra/miss penalties; numerals 3시→세 시; repeats contained → 95. Levels: standard pass 80 / strict pass 90 (pref in localStorage 'hb-speak-level')
   game/loot.js        pure seeded RNG: free daily box (`rollBox kind=free`, pity: every 5th free box = rare+ item), paid box (90 coins, always a NEW item, odds in ODDS), `featuredPick` (daily featured item, −30%, stored in `daily.featured`), `salePrice`
+  sync/               Supabase sync (optional): supabase.js (lazy client, env VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY; dead-code-eliminated when unset), syncCore.js (pure: syncKey, decide, summarize — unit-tested), SyncProvider.jsx (Google sign-in, debounced upload, pull on focus/online, conflict modal)
   game/tts.js         speak(text) — cancel+retry watchdog; dispatches window event 'tts-problem' ('stuck'|'no-voice') -> toast in App.jsx
   data/lessons.js     Hangul (vowels, consonants×2) + 'basics' group (받침 ×2, Sino/native numbers, time) + 9 daily-life scenes; each item {ko, rom, read(Thai reading), th, speak?, kind}
   data/routine.js     12 daily habits phrased in past tense (-았/었어요) — tick in real life for XP
@@ -47,6 +48,12 @@ src/
 - Rarity from price (`rarityOf`): ≤55 common, ≤100 rare, ≤200 epic, else legendary; `achv` items always legendary. Shop cards/wardrobe/book show rarity glow.
 - `player.room = {wallC, wallR, floorL, floorR, rug, wall, floor}` (migrated from old owned room items); `pet.outfit = {pet_hat, pet_face, pet_neck}`; buying auto-equips/places (`equipItem` in store).
 - 14 SETS give a one-time coin bonus when complete (auto achievements `set_*`); Collection Book (Character ▸ 📕 สะสม) shows totals, rarity counts, set progress and silhouettes for missing items. Level-1 starter items (STARTER overrides in data/shop.js, ~23 cheap items across 13 slots; start coins 60). Shop cards are 3 columns; tap the preview to open PreviewModal. Whole catalogue ≈14k coins, so it's a months-long goal at ~80–100 coins/day.
+
+## Cloud sync (Supabase) — see supabase/README.md for setup
+- Local `localStorage` stays the source of truth; cloud (`public.saves`, 1 row/user, RLS) is backup + cross-device sync. Without env vars the whole feature (and the supabase-js chunk) disappears from the build.
+- Versioning: `meta` in localStorage `hyeongbum-sync-v1` = {uid, localTs, syncedTs, lastKey}. `localTs` is forced > `syncedTs` on every local change (clock-skew safe); uploads are conditional (`update … eq client_ts = syncedTs`) so concurrent devices can't silently overwrite each other; anything ambiguous (both sides changed, or new device/account with local progress) → user picks cloud vs this device. `REPLACE` action applies a cloud save via `hydrate()`.
+- `syncKey()` ignores pet vitals/notices so an idle open tab doesn't upload every minute. Dev-only test seam: `window.__syncAttach(fakeClient)`.
+- Never ship the service_role key; only the publishable/anon key belongs in the client.
 
 ## Surprise & wishlist (collection retention)
 - Home 🎁 card: free daily box (needs `daily.xp>0`, once/day via `OPEN_BOX`) → coins 10–35 / a food / an item; featured item (−30%) opens PreviewModal; banner when a wished item becomes affordable.

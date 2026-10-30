@@ -6,6 +6,7 @@ import { GEAR } from './data/shop.js'
 import { ACH_BY_ID } from './data/achievements.js'
 import { DEFAULT_LOOK } from './pixel/sprites.js'
 import LookEditor from './components/LookEditor.jsx'
+import { useSync } from './sync/SyncProvider.jsx'
 import GearPreview from './components/GearPreview.jsx'
 import { GEAR_BY_ID, FOOD_BY_ID, RARITY } from './data/shop.js'
 import Home from './pages/Home.jsx'
@@ -148,6 +149,7 @@ const GOALS = [
 
 function Onboarding({ onStart }) {
   const { dispatch } = useGame()
+  const sync = useSync()
   const [name, setName] = useState('')
   const [skipHangul, setSkipHangul] = useState(false)
   const [goal, setGoal] = useState(50)
@@ -163,6 +165,9 @@ function Onboarding({ onStart }) {
           <Avatar scale={5} look={look} outfit={{ top: 'top_blue', bottom: look.gender === 'f' ? 'skirt_navy' : 'pants_navy' }} className="bob" />
           <Pet stage="egg" scale={6} className="wobble" />
         </div>
+        {sync.configured && !sync.user && (
+          <button className="link" onClick={sync.signIn}>มีบัญชีอยู่แล้ว? เข้าสู่ระบบด้วย Google เพื่อกู้ความคืบหน้า</button>
+        )}
         <h2>환영해요! ยินดีต้อนรับ</h2>
         <p>
           นี่คือไข่เสือ <b>범이</b> 🐯 เรียนภาษาเกาหลีและทำกิจวัตรทุกวัน ตัวละครของคุณจะเลเวลอัป และ 범이 จะฟักออกมาแล้วโตขึ้น
@@ -194,8 +199,46 @@ function Onboarding({ onStart }) {
   )
 }
 
+const SYNC_TEXT = {
+  idle: '✓ ซิงก์แล้ว',
+  syncing: '⟳ กำลังซิงก์…',
+  error: '⚠ ซิงก์ไม่สำเร็จ',
+  offline: '📴 ออฟไลน์ — จะซิงก์เมื่อมีเน็ต',
+  paused: '⏸ รอคุณเลือกเซฟ (กดซิงก์ตอนนี้เพื่อเลือก)',
+}
+
+// บัญชี & ซิงก์ (แสดงเมื่อมีการตั้งค่า Supabase เท่านั้น)
+function SyncSection() {
+  const sync = useSync()
+  if (!sync.configured) return null
+  const last = sync.lastSync ? new Date(sync.lastSync).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : null
+  return (
+    <div className="sync-box pixel-box">
+      <b>☁ บัญชี & ซิงก์</b>
+      {!sync.user ? (
+        <>
+          <small className="muted">เข้าสู่ระบบเพื่อสำรองความคืบหน้า และเล่นต่อได้บนทุกเครื่อง (ยังเล่นแบบไม่ล็อกอินได้ตามปกติ)</small>
+          <button className="pixel-btn primary" onClick={sync.signIn}>เข้าสู่ระบบด้วย Google</button>
+        </>
+      ) : (
+        <>
+          <small className="mono sync-email">{sync.user.email}</small>
+          <small className={`sync-status ${sync.status}`}>{SYNC_TEXT[sync.status]}{last && sync.status === 'idle' ? ` · ${last}` : ''}</small>
+          {sync.error && sync.status !== 'idle' && <small className="warn">{sync.error}</small>}
+          <div className="row gap">
+            <button className="pixel-btn small" disabled={sync.status === 'syncing'} onClick={sync.syncNow}>ซิงก์ตอนนี้</button>
+            <button className="pixel-btn small" onClick={sync.signOut}>ออกจากระบบ</button>
+          </div>
+          <small className="muted">ออกจากระบบแล้ว ข้อมูลยังอยู่ในเครื่องนี้ แต่จะไม่ซิงก์อีกจนกว่าจะเข้าสู่ระบบใหม่</small>
+        </>
+      )}
+    </div>
+  )
+}
+
 function Settings({ onClose }) {
   const { state, dispatch } = useGame()
+  const sync = useSync()
   const [pn, setPn] = useState(state.player.name)
   const [petn, setPetn] = useState(state.pet.name)
   const acc = state.stats.answered ? Math.round((state.stats.correct / state.stats.answered) * 100) : 0
@@ -212,6 +255,7 @@ function Settings({ onClose }) {
           ))}
         </div>
       </div>
+      <SyncSection />
       <p className="muted small">
         คำที่เรียนแล้ว {Object.keys(state.srs).length} · ตอบทั้งหมด {state.stats.answered} ข้อ · ความแม่นยำ {acc}%
       </p>
@@ -222,10 +266,10 @@ function Settings({ onClose }) {
           onClose()
         }}>บันทึก</button>
         <button className="pixel-btn danger" onClick={() => {
-          if (window.confirm('ลบความคืบหน้าทั้งหมดและเริ่มใหม่?')) { dispatch({ type: 'RESET' }); onClose() }
+          if (window.confirm(sync.user ? 'ลบความคืบหน้าทั้งหมดและเริ่มใหม่? (เซฟบนคลาวด์จะถูกแทนที่ด้วยเซฟใหม่ด้วย)' : 'ลบความคืบหน้าทั้งหมดและเริ่มใหม่?')) { dispatch({ type: 'RESET' }); onClose() }
         }}>เริ่มใหม่ทั้งหมด</button>
       </div>
-      <p className="muted small">ข้อมูลเก็บในเครื่องนี้เท่านั้น · 🔊 ต้องมีเสียงภาษาเกาหลีในระบบ (iOS/Android/Chrome ส่วนใหญ่มีให้)</p>
+      <p className="muted small">{sync.configured ? 'ข้อมูลเก็บในเครื่องนี้เสมอ และสำรองบนคลาวด์เมื่อเข้าสู่ระบบ' : 'ข้อมูลเก็บในเครื่องนี้เท่านั้น'} · 🔊 ต้องมีเสียงภาษาเกาหลีในระบบ (iOS/Android/Chrome ส่วนใหญ่มีให้)</p>
     </Modal>
   )
 }
@@ -258,6 +302,7 @@ function TtsToast() {
 
 export default function App() {
   const { state, dispatch } = useGame()
+  const sync = useSync()
   const [tab, setTab] = useState('home')
   const [lesson, setLesson] = useState(null)
   const [settings, setSettings] = useState(false)
@@ -274,6 +319,7 @@ export default function App() {
         </button>
         <span className="streak">🔥{liveStreak(state.streak, dayStr(), state.player.freezes || 0)}</span>
         <Coins n={state.player.coins} />
+        {sync.configured && sync.user && <button className={`icon-btn cloud-ico ${sync.status}`} onClick={() => setSettings(true)} aria-label="สถานะซิงก์" title={SYNC_TEXT[sync.status]}>☁</button>}
         <button className="icon-btn" onClick={() => setSettings(true)} aria-label="ตั้งค่า">⚙</button>
       </header>
 
