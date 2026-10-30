@@ -8,6 +8,13 @@ const PROMPT = {
   listen: 'ฟังแล้วเลือกคำที่ได้ยิน',
 }
 
+// โจทย์ของบทตัวอักษร (ไม่ใช่ "แปลว่าอะไร" เพราะตัวอักษรไม่มีความหมาย แต่มี "เสียงอ่าน")
+const PROMPT_LETTER = {
+  ko2th: 'ตัวอักษรนี้อ่านว่าอะไร?',
+  th2ko: 'ตัวอักษรไหนอ่านว่านี้?',
+  listen: 'ฟังเสียงแล้วเลือกตัวอักษรที่ได้ยิน',
+}
+
 export default function Quiz({ questions, onAnswer, onFinish }) {
   const [i, setI] = useState(0)
   const [picked, setPicked] = useState(null)
@@ -44,7 +51,7 @@ export default function Quiz({ questions, onAnswer, onFinish }) {
       <div className="quiz-progress">
         {questions.map((_, k) => <span key={k} className={k < i ? 'done' : k === i ? 'cur' : ''} />)}
       </div>
-      <p className="quiz-prompt">{PROMPT[q.type]}</p>
+      <p className="quiz-prompt">{(q.letter ? PROMPT_LETTER : PROMPT)[q.type]}</p>
 
       <div className="quiz-card pixel-box">
         {q.type === 'ko2th' && (
@@ -53,7 +60,7 @@ export default function Quiz({ questions, onAnswer, onFinish }) {
             <SpeakBtn text={sayText} />
           </>
         )}
-        {q.type === 'th2ko' && <div className="big-th">{q.item.th}</div>}
+        {q.type === 'th2ko' && <div className="big-th">{q.thText ?? q.item.th}</div>}
         {q.type === 'listen' && (
           <button className="listen-btn" onClick={() => speak(sayText)}>🔊<small>แตะเพื่อฟังอีกครั้ง</small></button>
         )}

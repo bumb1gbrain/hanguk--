@@ -178,7 +178,11 @@ export function buildQuiz(items, pool, { n = 6, canListen = true } = {}) {
   const types = canListen ? ['ko2th', 'th2ko', 'listen'] : ['ko2th', 'th2ko']
   return chosen.map((it, i) => {
     const type = types[i % types.length]
-    const field = type === 'ko2th' ? 'th' : 'ko'
+    // ตัวอักษรฮันกึล: ช่อง th เป็นคำอธิบายที่มีตัวอักษรนั้นอยู่ในข้อความ (เช่น "พยัญชนะ ㅂ (비읍)") ถ้าใช้เป็นตัวเลือก
+    // จะเฉลยตัวเอง จึงใช้ "คำอ่านไทย" (read) แทน
+    const letter = it.kind === 'letter'
+    const thField = letter ? 'read' : 'th'
+    const field = type === 'ko2th' ? thField : 'ko'
     // ตัวหลอกเลือกจากบทเดียวกันก่อน (หมวดใกล้เคียง) แล้วค่อยขยายไปประเภทเดียวกัน/ทั้งหมด
     const base = pool.filter((x) => x.id !== it.id && x[field] !== it[field])
     const sameLesson = base.filter((x) => x.lesson === it.lesson)
@@ -193,6 +197,6 @@ export function buildQuiz(items, pool, { n = 6, canListen = true } = {}) {
       if (distract.length === 3) break
     }
     const options = shuffle([it, ...distract]).map((o) => ({ id: o.id, label: o[field], sub: field === 'ko' ? o.read : null }))
-    return { item: it, type, options }
+    return { item: it, type, options, letter, thText: it[thField] }
   }).sort(() => Math.random() - 0.5)
 }
