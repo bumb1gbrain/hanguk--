@@ -181,16 +181,19 @@ export function buildQuiz(items, pool, { n = 6, canListen = true } = {}) {
     // ตัวอักษรฮันกึล: ช่อง th เป็นคำอธิบายที่มีตัวอักษรนั้นอยู่ในข้อความ (เช่น "พยัญชนะ ㅂ (비읍)") ถ้าใช้เป็นตัวเลือก
     // จะเฉลยตัวเอง จึงใช้ "คำอ่านไทย" (read) แทน
     const letter = it.kind === 'letter'
-    const thField = letter ? 'read' : 'th'
+    const thField = letter ? 'read' : it.qth ? 'qth' : 'th' // qth = ข้อความสำหรับโจทย์โดยเฉพาะ (กรณี th เฉลยตัวเอง)
     const field = type === 'ko2th' ? thField : 'ko'
-    // ตัวหลอกเลือกจากบทเดียวกันก่อน (หมวดใกล้เคียง) แล้วค่อยขยายไปประเภทเดียวกัน/ทั้งหมด
-    const base = pool.filter((x) => x.id !== it.id && x[field] !== it[field])
+    // ตัวหลอก: ต้องมีข้อมูลในช่องนั้น · เลือกจากประเภทเดียวกัน (คำ/ประโยค) และความยาวใกล้เคียงกัน
+    // เพื่อไม่ให้เดาจากความยาวหรือรูปแบบของตัวเลือกได้ · ตัวหลอกจากบทเดียวกันมาก่อน
+    const base = pool.filter((x) => x.id !== it.id && x[field] && x[field] !== it[field])
     const sameLesson = base.filter((x) => x.lesson === it.lesson)
     const sameKind = base.filter((x) => x.kind === it.kind)
     const others = sameLesson.length >= 3 ? sameLesson : sameKind.length >= 3 ? sameKind : base
+    const len = (o) => String(o[field]).length
+    const rank = (o) => (o.kind === it.kind ? 0 : 8) + Math.min(Math.abs(len(o) - len(it)), 12) * 0.6 + Math.random() * 3
     const seen = new Set([it[field]])
     const distract = []
-    for (const o of shuffle(others)) {
+    for (const o of [...others].sort((x, y) => rank(x) - rank(y))) {
       if (seen.has(o[field])) continue
       seen.add(o[field])
       distract.push(o)

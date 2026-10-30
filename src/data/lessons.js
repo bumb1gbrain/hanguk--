@@ -281,6 +281,13 @@ export const LESSONS = [
   },
 ].map((l) => ({ ...l, items: l.items.map((it, i) => ({ ...it, id: `${l.id}:${i}`, lesson: l.id })) }))
 
+// บท 받침 1: คำอธิบาย (th) มีตัวอักษรตัวสะกดอยู่ในข้อความ (เช่น "ㅅ ㅈ ㅊ → เสียง t") ถ้าใช้เป็นตัวเลือกในแบบทดสอบ ผู้เล่นแค่จับคู่ตัวอักษร
+// ไม่ต้องรู้ว่าอ่านเป็นเสียงอะไร → แบบทดสอบใช้ "เสียงของตัวสะกด" (qth) แทน และถามคนละแบบ (qprompt)
+const FINAL_SOUND = { 박: 'เสียง k (แม่กก)', 안: 'เสียง n (แม่กน)', 옷: 'เสียง t (แม่กด)', 물: 'เสียง l (ลิ้นแตะเพดาน)', 밤: 'เสียง m (แม่กม)', 밥: 'เสียง p (แม่กบ)', 강: 'เสียง ng (แม่กง)' }
+for (const it of LESSONS.find((l) => l.id === 'batchim1').items) {
+  it.qth = FINAL_SOUND[it.ko]
+  it.qprompt = { ko2th: 'ตัวสะกดของคำนี้ ออกเสียงเป็นแบบไหน?', th2ko: 'คำไหนมีตัวสะกดออกเสียงแบบนี้?' }
+}
 export const ALL_ITEMS = LESSONS.flatMap((l) => l.items)
 export const ITEM_BY_ID = Object.fromEntries(ALL_ITEMS.map((it) => [it.id, it]))
 export const LESSON_BY_ID = Object.fromEntries(LESSONS.map((l) => [l.id, l]))

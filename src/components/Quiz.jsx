@@ -56,7 +56,7 @@ export default function Quiz({ questions, onAnswer, onFinish }) {
       <div className="quiz-progress">
         {questions.map((_, k) => <span key={k} className={k < i ? 'done' : k === i ? 'cur' : ''} />)}
       </div>
-      <p className="quiz-prompt">{(q.letter ? PROMPT_LETTER : PROMPT)[q.type]}</p>
+      <p className="quiz-prompt">{q.item.qprompt?.[q.type] || (q.letter ? PROMPT_LETTER : PROMPT)[q.type]}</p>
 
       <div className="quiz-card pixel-box">
         {q.type === 'ko2th' && (
