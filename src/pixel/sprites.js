@@ -84,6 +84,12 @@ export const HAIR_COLORS = [
   { id: 5, c: '#6a5acd', th: 'ม่วง' },
   { id: 6, c: '#4fa3d9', th: 'ฟ้า' },
   { id: 7, c: '#cfcfd8', th: 'เทา/เงิน' },
+  { id: 8, c: '#ff8fb1', th: 'ชมพู' },
+  { id: 9, c: '#d9632b', th: 'ส้มขิง' },
+  { id: 10, c: '#f4f4f8', th: 'ขาว' },
+  { id: 11, c: '#3fbf9f', th: 'เขียวมิ้นต์' },
+  { id: 12, c: '#2b3a7a', th: 'กรมท่า' },
+  { id: 13, c: '#f2dc8c', th: 'บลอนด์อ่อน' },
 ]
 // ทรงผม: '.' = ไม่แก้ pixel เดิม (ซ้อนทับบนหัวล้าน) แถวที่ 0-10
 export const HAIR_STYLES = {
@@ -95,14 +101,21 @@ export const HAIR_STYLES = {
   ponytail: { th: 'ผมหางม้า', grid: { 1: '.....hhhhhh.....', 2: '....hhhhhhhh....', 3: '...hhhhhhhhhh...', 4: '...hh......hhh..', 5: '...h........hhh.', 6: '.............hhh', 7: '.............hh.', 8: '..............h.' } },
 }
 // ทรงผมแยกตามเพศ: g = 'm' | 'f' | 'any' (ทรงกลางใช้ได้ทั้งสองเพศ)
-const HAIR_G = { short: 'any', bob: 'any', spiky: 'm', buzz: 'm', long: 'f', ponytail: 'f' }
+const HAIR_G = { short: 'any', bob: 'any', spiky: 'm', buzz: 'm', long: 'any', ponytail: 'f' }
 Object.entries(HAIR_G).forEach(([id, g]) => { HAIR_STYLES[id].g = g })
 Object.assign(HAIR_STYLES, {
   sidepart: { th: 'แสกข้าง', g: 'm', grid: { 1: '.....hhhhhh.....', 2: '....hhhhhhhh....', 3: '...hhhhhhhhhh...', 4: '...hhhhhh..hh...', 5: '...hhh......h...' } },
   messy: { th: 'ยุ่งๆ', g: 'm', grid: { 0: '....h.h..h.h....', 1: '...hhhhhhhhhh...', 2: '..hhhhhhhhhhhh..', 3: '...hhhhhhhhhh...', 4: '...hh.hh..hhh...', 5: '...h........h...' } },
-  twin: { th: 'ผมแกละ', g: 'f', grid: { 1: '.....hhhhhh.....', 2: '....hhhhhhhh....', 3: '...hhhhhhhhhh...', 4: '..hhh......hhh..', 5: '.hhh........hhh.', 6: '.hh..........hh.', 7: '.hh..........hh.', 8: '..h..........h..' } },
+  twin: { th: 'ผมแกละ (ทวินเทล)', g: 'f', grid: { 1: '.....hhhhhh.....', 2: '....hhhhhhhh....', 3: '...hhhhhhhhhh...', 4: '...hh......hh...', 5: '.rrh........hrr.', 6: '.hhh........hhh.', 7: 'hhh..........hhh', 8: 'hhh..........hhh', 9: 'hhh..........hhh', 10: '.hh..........hh.', 11: '.hh..........hh.', 12: '..h..........h..' } },
   bun: { th: 'มวยผม', g: 'f', grid: { 0: '.....hhhhhh.....', 1: '....hhhhhhhh....', 2: '.....hhhhhh.....', 3: '...hhhhhhhhhh...', 4: '...hh......hh...', 5: '...h........h...' } },
   bangs: { th: 'ยาวม้าหน้า', g: 'f', grid: { 1: '.....hhhhhh.....', 2: '....hhhhhhhh....', 3: '...hhhhhhhhhh...', 4: '...hhhhhhhhhh...', 5: '..hhh......hhh..', 6: '..hh........hh..', 7: '..hh........hh..', 8: '..hh........hh..', 9: '..hhh......hhh..', 10: '...hh......hh...' } },
+  twinbun: { th: 'ดังโงะสองข้าง', g: 'f', grid: { 0: '.hhh........hhh.', 1: '.hhhh.hhhh.hhhh.', 2: '..hh.hhhhhh.hh..', 3: '...hhhhhhhhhh...', 4: '...hh......hh...', 5: '...h........h...' } },
+  braid: { th: 'เปียข้างเดียว', g: 'f', grid: { 1: '.....hhhhhh.....', 2: '....hhhhhhhh....', 3: '...hhhhhhhhhh...', 4: '...hh......hhh..', 5: '...h........hhh.', 6: '............hhh.', 7: '.............hh.', 8: '............hhh.', 9: '.............hh.', 10: '............hhh.', 11: '.............hh.', 12: '.............rh.' } },
+  wavy: { th: 'ลอนยาว', g: 'f', grid: { 1: '.....hhhhhh.....', 2: '....hhhhhhhh....', 3: '...hhhhhhhhhh...', 4: '...hh......hh...', 5: '..hhh......hhh..', 6: '.hhh........hhh.', 7: '..hhh......hhh..', 8: '.hhh........hhh.', 9: '..hhh......hhh..', 10: '.hhh........hhh.', 11: '..hh........hh..' } },
+  slick: { th: 'หวีเสยหลัง', g: 'm', grid: { 1: '.....hhhhhh.....', 2: '....hhhhhhhh....', 3: '...hhhhhhhhhh...', 4: '....h......h....' } },
+  afro: { th: 'หยิกฟู', g: 'any', grid: { 0: '....hhhhhhhh....', 1: '..hhhhhhhhhhhh..', 2: '.hhhhhhhhhhhhhh.', 3: '.hhhhhhhhhhhhhh.', 4: '.hhhh......hhhh.', 5: '.hhh........hhh.', 6: '..hh........hh..' } },
+  manbun: { th: 'มวยผมชาย', g: 'any', grid: { 0: '......hhhh......', 1: '.....hhhhhh.....', 2: '....hhhhhhhh....', 3: '...hhhhhhhhhh...', 4: '...hh......hh...' } },
+  mohawk: { th: 'โมฮอว์ก', g: 'm', grid: { 0: '.......hh.......', 1: '......hhhh......', 2: '......hhhh......', 3: '......hhhh......' } },
 })
 export const hairFor = (gender) => Object.entries(HAIR_STYLES).filter(([, h]) => h.g === 'any' || h.g === gender)
 
@@ -110,6 +123,9 @@ export const EYE_STYLES = {
   dot: { th: 'ตาเรียว', rows: {} },
   round: { th: 'ตากลม', rows: { 6: '...sswesswess...', 7: '...sseesseess...' } }, // w = ประกายตา
   calm: { th: 'ตาสงบ', rows: { 6: '...ssssssssss...', 7: '...sseesseess...' } },
+  big: { th: 'ตาโต', rows: { 6: '...sseesseess...', 7: '...sseesseess...' } },
+  sharp: { th: 'ตาคม', rows: { 6: '...sseesseess...', 7: '...ssessssess...' } },
+  wink: { th: 'ขยิบตา', rows: { 6: '...ssesssssss...', 7: '...ssessseess...' } },
 }
 export const DEFAULT_LOOK = { gender: 'm', skin: 0, hair: 'short', hairColor: 0, eyes: 'dot' }
 export const GENDER_DEFAULTS = {

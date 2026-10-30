@@ -63,7 +63,7 @@ src/
 - Round eyes have a white sparkle pixel (`w` in AVATAR_PAL).
 
 ## Character progression
-- `player.look = {gender m|f, skin 0-5, hair short|spiky|buzz|long|bob|ponytail, hairColor 0-7, eyes dot|round|calm}` chosen at onboarding, editable any time from Home ▸ 👤 ตัวละคร (`SET_LOOK`, sanitised in store).
+- `player.look = {gender m|f, skin 0-5, hair = any key of HAIR_STYLES (female: twin pigtails, twinbun, braid, wavy, bun, bangs…; male: spiky, buzz, slick, mohawk…; any: afro, manbun…), hairColor 0-13, eyes dot|round|calm|big|sharp|wink}` chosen at onboarding, editable any time from Home ▸ 👤 ตัวละคร (`SET_LOOK`, sanitised in store).
 - Gear slots: top, bottom, shoes, hat, glasses, neck, back (+ room). `GEAR` in data/shop.js; shop tabs 음식/옷/소품/방/특별 via `SLOT_GROUPS`; `achv:true` items are never sold (only granted by achievements). Level-up modal lists the gear unlocked at that level.
 - Ranks by level (`RANKS`/`rankFor`): 새내기 → 학생 → 열공러 → 한국어 러버 → 통역사 지망생 → 한글 마스터 → 한국 통, shown on the room nametag and in the character modal.
 

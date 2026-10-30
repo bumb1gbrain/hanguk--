@@ -25,7 +25,7 @@ export function Avatar({ outfit = {}, look, mood = 'normal', scale = 6, classNam
   const hairC = (HAIR_COLORS[lk.hairColor] || HAIR_COLORS[0]).c
   const pal = { ...AVATAR_PAL, s: skin, h: hairC, ...(TOP_COLORS[outfit.top] || {}) }
   // ผมวาดก่อน แล้วค่อยซ้อนเสื้อ/กางเกง/รองเท้า/เป้/เครื่องประดับ/หมวก ตามลำดับ
-  const layers = [{ grid: (HAIR_STYLES[lk.hair] || HAIR_STYLES.short).grid, pal: { h: hairC } }]
+  const layers = [{ grid: (HAIR_STYLES[lk.hair] || HAIR_STYLES.short).grid, pal: { h: hairC, r: '#ff6b8b' } }]
   const withSkin = (ov) => ({ ...ov, pal: { s: skin, ...ov.pal } })
   const topOv = female ? fitToBody(OVERLAYS[outfit.top], base) : OVERLAYS[outfit.top]
   for (const slot of SLOT_ORDER) {
