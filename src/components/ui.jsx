@@ -1,4 +1,4 @@
-import { speak, speakFor } from '../game/tts.js'
+import { speak, speakFor } from '../game/lessonVoice.js'
 
 export function Bar({ value, max = 100, color = 'var(--accent)', label, icon }) {
   const pct = Math.round((value / max) * 100)

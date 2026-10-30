@@ -9,7 +9,8 @@ import { SPECIES, SPECIES_LIST } from './pixel/pets.js'
 import { BOND_LEVEL_COINS } from './data/tricks.js'
 import LookEditor from './components/LookEditor.jsx'
 import { useSync } from './sync/SyncProvider.jsx'
-import { canSpeak, speakSeq, getTtsPrefs, setTtsPrefs, listKoVoices, currentVoiceName } from './game/tts.js'
+import { speakSeq } from './game/lessonVoice.js'
+import { canSpeak, speakSeq as deviceSeq, getTtsPrefs, setTtsPrefs, listKoVoices, currentVoiceName } from './game/tts.js'
 import GearPreview from './components/GearPreview.jsx'
 import { GEAR_BY_ID, FOOD_BY_ID, RARITY } from './data/shop.js'
 import Home from './pages/Home.jsx'
@@ -272,25 +273,38 @@ function VoiceSettings() {
   if (!canSpeak()) return null
   const update = (patch) => { setTtsPrefs(patch); setPrefs(getTtsPrefs()) }
   const active = prefs.voice || currentVoiceName()
+  const teacher = prefs.source !== 'device'
   return (
     <div className="choices">
       <small>🔊 เสียงอ่านภาษาเกาหลี</small>
       <div className="row gap">
-        {SPEEDS.map((sp) => (
-          <button key={sp.rate} className={`choice ${prefs.rate === sp.rate ? 'on' : ''}`} onClick={() => update({ rate: sp.rate })}>{sp.th}</button>
-        ))}
+        <button className={`choice ${teacher ? 'on' : ''}`} onClick={() => update({ source: 'ai' })}>🎓 ครูฮานา</button>
+        <button className={`choice ${!teacher ? 'on' : ''}`} onClick={() => update({ source: 'device' })}>📱 เสียงของเครื่อง</button>
       </div>
-      {voices.length > 1 && (
-        <label className="field">
-          <span>เสียงผู้อ่าน (ลองเปลี่ยนถ้าฟังยาก)</span>
-          <select value={active || ''} onChange={(e) => update({ voice: e.target.value || null })}>
-            {voices.map((v) => <option key={v.name} value={v.name}>{v.name}</option>)}
-          </select>
-        </label>
+      {teacher ? (
+        <>
+          <small className="muted"><span className="ko">하나 선생님</span> อ่านให้ฟังเหมือนกันทุกเครื่อง · ข้อความที่ครูยังไม่ได้อัดจะใช้เสียงของเครื่องแทน</small>
+          <button className="pixel-btn small" onClick={() => speakSeq(['가', '카', '자', '차', '어', '오', '으', '우'], { gap: 650 })}>▶ ฟังเสียงครูฮานา</button>
+        </>
+      ) : (
+        <>
+          <div className="row gap">
+            {SPEEDS.map((sp) => (
+              <button key={sp.rate} className={`choice ${prefs.rate === sp.rate ? 'on' : ''}`} onClick={() => update({ rate: sp.rate })}>{sp.th}</button>
+            ))}
+          </div>
+          {voices.length > 1 && (
+            <label className="field">
+              <span>เสียงผู้อ่าน</span>
+              <select value={active || ''} onChange={(e) => update({ voice: e.target.value || null })}>
+                {voices.map((v) => <option key={v.name} value={v.name}>{v.name}</option>)}
+              </select>
+            </label>
+          )}
+          <button className="pixel-btn small" onClick={() => deviceSeq(['가', '카', '까', '자', '차', '어', '오', '으', '우'], { gap: 650 })}>▶ ทดสอบเสียงของเครื่อง</button>
+        </>
       )}
-      <button className="pixel-btn small" onClick={() => speakSeq(['가', '카', '까', '자', '차', '어', '오', '으', '우'], { gap: 650 })}>▶ ทดสอบเสียง (가 카 까 · 자 차 · 어 오 · 으 우)</button>
-      <small className="muted">ถ้าฟังคู่เสียงใกล้กันไม่ออก ลองเลือก "ช้า" หรือเปลี่ยนเสียงผู้อ่าน · ในบทเรียนมีปุ่ม 🐢 ฟังแบบช้า</small>
-      <small className="muted">🎙 เสียงพากย์ในฉากเรื่องราวสร้างด้วย AI (Supertonic 2, สัญญาอนุญาต OpenRAIL-M) ไม่ใช่เสียงมนุษย์จริง</small>
+      <small className="muted">🎙 เสียงครูฮานาและเสียงตัวละครในเรื่องสร้างด้วย AI (Supertonic 2, OpenRAIL-M) ไม่ใช่เสียงมนุษย์จริง</small>
     </div>
   )
 }

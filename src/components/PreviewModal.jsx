@@ -5,7 +5,7 @@ import { GEAR_BY_ID, GEAR, SETS, RARITY, SLOT_TH, isPetSlot } from '../data/shop
 import { Avatar, Pet } from '../pixel/Characters.jsx'
 import RoomScene from './RoomScene.jsx'
 import { Modal } from './ui.jsx'
-import { speak } from '../game/tts.js'
+import { speak } from '../game/lessonVoice.js'
 import { salePrice } from '../game/loot.js'
 
 // หน้าต่างดูไอเทมขนาดใหญ่ + ลองสวม/วางก่อนซื้อ (แสดงบนตัวละคร/สัตว์เลี้ยง/ห้องของผู้เล่นจริง)

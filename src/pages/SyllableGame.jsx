@@ -3,7 +3,7 @@ import { useGame } from '../game/store.jsx'
 import { ALL_ITEMS } from '../data/lessons.js'
 import { LEAD, VOWEL, TAIL, isSyllable, decompose, compose, choices, COMMON_LEAD, COMMON_VOWEL, COMMON_TAIL } from '../game/hangul.js'
 import { syllableReward, SYLLABLE_CAP, stageFor } from '../game/logic.js'
-import { speak } from '../game/tts.js'
+import { speak } from '../game/lessonVoice.js'
 import { SpeakBtn } from '../components/ui.jsx'
 import { Pet } from '../pixel/Characters.jsx'
 

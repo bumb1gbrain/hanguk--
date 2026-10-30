@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useGame } from '../game/store.jsx'
 import { ROUTINE, ROUTINE_TIMES } from '../data/routine.js'
 import { SpeakBtn } from '../components/ui.jsx'
-import { speak } from '../game/tts.js'
+import { speak } from '../game/lessonVoice.js'
 
 // ช่วงเวลาปัจจุบัน: เช้า 05–11 · กลางวัน 11–18 · กลางคืน 18–05
 const currentTime = (h) => (h >= 5 && h < 11 ? 'morning' : h >= 11 && h < 18 ? 'day' : 'night')

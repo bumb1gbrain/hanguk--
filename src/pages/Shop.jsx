@@ -6,7 +6,7 @@ import { BOX_PRICE, ODDS, FEATURED_DISCOUNT, salePrice } from '../game/loot.js'
 import GearPreview from '../components/GearPreview.jsx'
 import PreviewModal from '../components/PreviewModal.jsx'
 import { Coins } from '../components/ui.jsx'
-import { speak } from '../game/tts.js'
+import { speak } from '../game/lessonVoice.js'
 
 const TABS = [
   { id: 'food', ko: '음식', th: 'อาหาร' },

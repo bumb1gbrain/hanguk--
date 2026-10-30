@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { speakFor } from '../game/tts.js'
+import { speakFor } from '../game/lessonVoice.js'
 import { SpeakBtn } from './ui.jsx'
 
 const PROMPT = {

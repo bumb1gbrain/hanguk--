@@ -2,7 +2,7 @@
 // ลำดับความสำคัญ: 1) ไฟล์เสียงสำเร็จรูป (public/voice, สร้างด้วย scripts/gen-voice.mjs) 2) Web Speech พร้อมโปรไฟล์เสียง (เสียง/ระดับเสียง/ความเร็ว) 3) สัตว์เลี้ยงใช้เสียงร้องสังเคราะห์
 import { speak, stopSpeaking, voicesForCast } from './tts.js'
 import { playCry } from './cry.js'
-import { voiceKey } from './voiceKey.js'
+import { voiceKey, voiceText } from './voiceKey.js'
 
 // st = เสียงสำเร็จรูปจาก Supertonic 2 (M1–M5, F1–F5 หรือผสม 'M1+F5@0.5') ใช้ตอนสร้างไฟล์ด้วย scripts/gen-voice.mjs · เพิ่มตัวละครใหม่ = เพิ่มบรรทัดเดียว
 // rate = ตัวคูณความเร็วจากที่ผู้เล่นตั้งไว้ · pitch = ระดับเสียง (1 = ปกติ) · slot = ลำดับเสียงในเครื่องที่แจกให้ (ถ้ามีหลายเสียง)
@@ -10,6 +10,8 @@ export const VOICE_PROFILES = {
   narr: { th: 'ผู้เล่าเรื่อง', rate: 0.95, pitch: 0.95, slot: 0, st: { voice: 'M3', speed: 1.0 } },
   gran: { th: 'คุณยาย', rate: 0.78, pitch: 0.65, slot: 1, st: { voice: 'F5', speed: 0.85 } },
   vendor: { th: 'แม่ค้า', rate: 1.05, pitch: 1.0, slot: 4, st: { voice: 'F4', speed: 1.1 } },
+  teacher: { th: 'ครู (เนื้อหาบทเรียน)', rate: 1, pitch: 1, slot: 0, st: { voice: 'F1', speed: 0.9 } },
+  teacher_slow: { th: 'ครู (แบบช้า)', rate: 0.7, pitch: 1, slot: 0, st: { voice: 'F1', speed: 0.7 } },
   me_f: { th: 'ผู้เล่น (หญิง)', rate: 1.0, pitch: 1.25, slot: 2, st: { voice: 'F2', speed: 1.05 } },
   me_m: { th: 'ผู้เล่น (ชาย)', rate: 1.0, pitch: 0.85, slot: 3, st: { voice: 'M1', speed: 1.05 } },
 }
@@ -28,6 +30,10 @@ export function preloadVoices() {
     .catch(() => { manifest = {} })
   return manifestLoading
 }
+
+export const voicesReady = () => !!manifest
+// ไฟล์เสียงสำเร็จรูปของข้อความนั้น (ถ้ามี) — speaker: teacher | teacher_slow | narr | ...
+export const voiceFile = (speaker, text) => manifest?.[voiceKey(speaker, voiceText(text))] || null
 
 let audio = null
 export function stopVoice() {

@@ -11,6 +11,11 @@ import { ALL_PARTS, linesOf } from '../src/data/story.js'
 import { SPECIES_LIST } from '../src/pixel/pets.js'
 import { VOICE_PROFILES } from '../src/game/voices.js'
 import { voiceKey, voiceText } from '../src/game/voiceKey.js'
+import { ALL_ITEMS } from '../src/data/lessons.js'
+import { ROUTINE } from '../src/data/routine.js'
+import { FOODS, GEAR } from '../src/data/shop.js'
+import { TRICKS } from '../src/data/tricks.js'
+import { MOOD_TEXT } from '../src/game/logic.js'
 
 const OUT = path.resolve('public/voice')
 const VENV = path.resolve('.voice-venv')
@@ -37,6 +42,26 @@ for (const part of ALL_PARTS) {
     }
   }
 }
+// ── เสียงครู: เนื้อหาบทเรียนและข้อความภาษาเกาหลีที่แอปอ่านออกเสียง (ปกติ + ช้า สำหรับบทเรียน) ──
+const addJob = (speaker, text, extra = {}) => {
+  const t = voiceText(text)
+  if (!t) return
+  jobs.set(voiceKey(speaker, t), { speaker, text: t, single: /^[가-힣]$/.test(t), ...extra })
+}
+const lessonTexts = new Set()
+for (const it of ALL_ITEMS) {
+  lessonTexts.add(it.speak || it.ko)
+  if (it.kind === 'letter') { // ตัวอักษรเล่นเป็นชุด: ชื่อ → พยางค์ → คำตัวอย่าง
+    const name = /\(([^)]+)\)/.exec(it.th || '')?.[1]
+    if (name) lessonTexts.add(name)
+    if (it.ex) lessonTexts.add(it.ex.ko)
+  }
+}
+for (const r of ROUTINE) lessonTexts.add(r.ko)
+for (const t of lessonTexts) { addJob('teacher', t); addJob('teacher_slow', t) }
+const otherTexts = new Set([...FOODS.map((f) => f.ko), ...GEAR.map((g) => g.ko), ...TRICKS.map((t) => t.ko), ...Object.values(MOOD_TEXT).map((m) => m.ko), '행복해요', '사랑해', '스트릭 보호'])
+for (const t of otherTexts) addJob('teacher', t, { takes: 3 })
+
 const chars = [...jobs.values()].reduce((n, j) => n + j.text.length, 0)
 console.log(`บรรทัดเสียง ${jobs.size} ไฟล์ · ${chars} ตัวอักษร`)
 if (!run) { console.log('ยังไม่ได้สร้าง (เพิ่ม --run เพื่อสร้างจริง)'); process.exit(0) }
@@ -59,7 +84,7 @@ console.log(`ต้องสร้างใหม่ ${todo.length} บรรท
 
 if (todo.length) {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'hb-voice-'))
-  const list = todo.map(([key, j]) => ({ key, speaker: j.speaker, text: j.text, voice: VOICE_PROFILES[j.speaker].st.voice, speed: VOICE_PROFILES[j.speaker].st.speed }))
+  const list = todo.map(([key, j]) => ({ key, speaker: j.speaker, text: j.text, voice: VOICE_PROFILES[j.speaker].st.voice, speed: VOICE_PROFILES[j.speaker].st.speed, single: !!j.single, takes: j.takes }))
   fs.writeFileSync(path.join(tmp, 'jobs.json'), JSON.stringify(list))
   sh(PY, [path.resolve('scripts/supertonic_synth.py'), path.join(tmp, 'jobs.json'), tmp])
   for (const { key } of list) {
