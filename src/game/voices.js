@@ -8,6 +8,7 @@ import { voiceKey } from './voiceKey.js'
 export const VOICE_PROFILES = {
   narr: { th: 'ผู้เล่าเรื่อง', rate: 0.95, pitch: 0.95, slot: 0, azure: 'ko-KR-BongJinNeural' },
   gran: { th: 'คุณยาย', rate: 0.78, pitch: 0.65, slot: 1, azure: 'ko-KR-SoonBokNeural' },
+  vendor: { th: 'แม่ค้า', rate: 1.05, pitch: 1.0, slot: 4, azure: 'ko-KR-SunHiNeural' },
   me_f: { th: 'ผู้เล่น (หญิง)', rate: 1.0, pitch: 1.25, slot: 2, azure: 'ko-KR-JiMinNeural' },
   me_m: { th: 'ผู้เล่น (ชาย)', rate: 1.0, pitch: 0.85, slot: 3, azure: 'ko-KR-InJoonNeural' },
 }

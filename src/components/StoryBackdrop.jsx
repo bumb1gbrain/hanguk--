@@ -52,6 +52,33 @@ function Room() {
   )
 }
 
+const APPLE = ['..g...', '.rrrr.', 'rrrrrr', 'rrrrrr', '.rrrr.']
+const CARROT = ['.gg.', '.gg.', 'oooo', '.oo.', '.oo.', '..o.']
+const FRUIT_PAL = { g: '#3fbf7f', r: '#e5484d', o: '#ff9a3c' }
+
+function Market() {
+  return (
+    <>
+      <div className="bd-mkt-sky"><i className="cloud c1" /><i className="cloud c2" /></div>
+      <div className="bd-mkt-sign ko">시장</div>
+      <div className="bd-lights" />
+      <div className="bd-stall l">
+        <div className="awning red" />
+        <div className="crate">
+          {Array.from({ length: 6 }, (_, i) => <Sprite key={i} grid={APPLE} pal={FRUIT_PAL} scale={4} />)}
+        </div>
+      </div>
+      <div className="bd-stall r">
+        <div className="awning green" />
+        <div className="crate">
+          {Array.from({ length: 5 }, (_, i) => <Sprite key={i} grid={CARROT} pal={FRUIT_PAL} scale={4} />)}
+        </div>
+      </div>
+      <div className="bd-floor bd-stone" />
+    </>
+  )
+}
+
 function Night() {
   return (
     <>
@@ -71,7 +98,7 @@ function Night() {
 export default function StoryBackdrop({ bg }) {
   return (
     <div className={`bd bd-${bg}`} aria-hidden="true">
-      {bg === 'shop' ? <Shop /> : bg === 'night' ? <Night /> : <Room />}
+      {bg === 'shop' ? <Shop /> : bg === 'night' ? <Night /> : bg === 'market' ? <Market /> : <Room />}
     </div>
   )
 }

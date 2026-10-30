@@ -780,3 +780,31 @@ body:has(.story) .tts-toast { bottom: auto; top: 44px; }
 .g-tag { font-size: 10.5px; padding: 0 5px; align-self: flex-start; }
 .g-tag.f { color: #ff9ec4; box-shadow: 0 0 0 1px #ff9ec4; }
 .g-tag.m { color: #8fc4ff; box-shadow: 0 0 0 1px #8fc4ff; }
+
+/* ───── ตลาด + ตัวเลือกในเรื่อง ───── */
+.sbg-market { background: #9fd8ff; }
+.bd-mkt-sky { inset: 0 0 34% 0; background: linear-gradient(#8fd3ff, #fff0c9); }
+.cloud { position: absolute; width: 70px; height: 22px; background: #fff; box-shadow: 14px -8px 0 #fff, 34px 0 0 #fff; opacity: 0.9; animation: drift 40s linear infinite; }
+.cloud.c1 { top: 70px; left: -90px; } .cloud.c2 { top: 130px; left: -90px; animation-delay: -20s; transform: scale(0.8); }
+.bd-mkt-sign { left: 50%; top: 44px; transform: translateX(-50%); padding: 4px 22px; background: #8a5a36; color: #ffe2a8; font-size: 22px; box-shadow: 0 0 0 3px #1b1424, inset 0 0 0 2px #c9a36b; z-index: 2; }
+.bd-lights { left: 0; right: 0; top: 96px; height: 18px; background: radial-gradient(circle, #ffd23f 3px, transparent 4px) 0 4px / 26px 14px, radial-gradient(circle, #ff8fb1 3px, transparent 4px) 13px 8px / 26px 14px; filter: drop-shadow(0 0 4px #ffe27a); animation: twinkle 2.2s steps(2) infinite; }
+.bd-stall { bottom: 62%; width: 46%; height: 130px; }
+.bd-stall.l { left: 2%; } .bd-stall.r { right: 2%; }
+.bd-stall .awning { position: absolute; left: 0; right: 0; top: 0; height: 36px; box-shadow: 0 4px 0 rgba(0, 0, 0, 0.25), 0 0 0 3px #1b1424; clip-path: polygon(0 0, 100% 0, 100% 80%, 92% 100%, 83% 80%, 75% 100%, 66% 80%, 58% 100%, 50% 80%, 41% 100%, 33% 80%, 25% 100%, 16% 80%, 8% 100%, 0 80%); }
+.awning.red { background: repeating-linear-gradient(90deg, #e5484d 0 22px, #fff 22px 44px); }
+.awning.green { background: repeating-linear-gradient(90deg, #3fbf7f 0 22px, #fff 22px 44px); }
+.bd-stall::before, .bd-stall::after { content: ''; position: absolute; top: 34px; bottom: 0; width: 6px; background: #5d3a24; }
+.bd-stall::before { left: 4px; } .bd-stall::after { right: 4px; }
+.bd-stall .crate { position: absolute; left: 10px; right: 10px; bottom: 0; display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-end; gap: 2px; padding: 6px 4px 8px; background: #a0643c; box-shadow: inset 0 4px 0 #7a4a2a, 0 0 0 3px #1b1424; max-height: 62px; overflow: hidden; }
+.bd-stone { background: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.12) 0 2px, transparent 2px 44px), repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.12) 0 2px, transparent 2px 30px), #b9b3a6; }
+.story-box.right { box-shadow: 0 0 0 3px #3fbf7f; }
+.story-box.wrong { box-shadow: 0 0 0 3px #e5484d; }
+.story-opts { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.story-opt { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; text-align: left; padding: 8px 10px; background: var(--panel2); color: inherit; border: 0; font: inherit; cursor: pointer; box-shadow: 0 0 0 2px var(--accent), inset 0 -3px 0 rgba(0, 0, 0, 0.25); }
+.story-opt b { font-size: 17px; width: 100%; }
+.story-opt small { font-size: 12px; opacity: 0.85; }
+.story-opt .read { color: var(--accent, #a79bff); }
+.story-opt:active { transform: translateY(2px); }
+@keyframes drift { to { transform: translateX(560px); } }
+
+.hint-btn { align-self: center; padding: 6px 14px; background: transparent; color: var(--muted, #b9b3d6); border: 0; box-shadow: 0 0 0 2px var(--line); font: inherit; font-size: 13px; cursor: pointer; }

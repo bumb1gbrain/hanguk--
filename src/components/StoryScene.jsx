@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useGame } from '../game/store.jsx'
 import { Avatar, Pet } from '../pixel/Characters.jsx'
 import Sprite from '../pixel/Sprite.jsx'
@@ -8,6 +8,7 @@ import { speak } from '../game/tts.js'
 import { playLine, stopVoice, preloadVoices } from '../game/voices.js'
 import { voiceText } from '../game/voiceKey.js'
 import { CHAPTERS, STORY_REWARD } from '../data/story.js'
+import { FOOD_BY_ID } from '../data/shop.js'
 import StoryBackdrop from './StoryBackdrop.jsx'
 
 // คุณยายเจ้าของร้าน (สไปรต์ซ้ายขวาสมมาตร ครึ่งซ้ายเท่านั้น)
@@ -20,7 +21,11 @@ const CRACK = ['............', '............', '............', '.....k.w....', '
 
 const NOTEBOOK = ['kkkkkkkk', 'kbbbbbbk', 'kbwwwwbk', 'kbwkkwbk', 'kbwwwwbk', 'kbbbbbbk', 'kkkkkkkk']
 
-const WHO = { narr: null, gran: { ko: '할머니', th: 'คุณยาย' }, me: null, pet: null }
+// คุณป้าแม่ค้าในตลาด
+const VENDOR = ['....rr', '...rrr', '..krrr', '..ksss', '..kses', '..ksps', '..kssr', '...kss', '..kaaw', '.kaaaw', '.kaaww', '.kaaww', '.kaaaa', '..kaaa', '...kkk'].map(mir)
+const VENDOR_PAL = { k: '#3a2a3a', r: '#e5484d', s: '#f0c49a', e: '#1b1424', p: '#f2a0a0', a: '#3fbf7f', w: '#ffffff' }
+
+const WHO = { narr: null, gran: { ko: '할머니', th: 'คุณยาย' }, vendor: { ko: '아주머니', th: 'คุณป้าแม่ค้า' }, me: null, pet: null }
 
 // ขั้นตอนฉาก: พิมพ์ข้อความทีละตัว แตะเพื่อข้าม/ไปต่อ · อ่านออกเสียงบรรทัดเกาหลีอัตโนมัติ
 export default function StoryScene({ part, onDone, replay = false }) {
@@ -30,34 +35,53 @@ export default function StoryScene({ part, onDone, replay = false }) {
   const fill = (t) => t.replaceAll('{name}', player.name).replaceAll('{pet}', pet.name).replaceAll('{soundRead}', sp.sound.read).replaceAll('{sound}', sp.sound.ko)
   const [i, setI] = useState(0)
   const [typed, setTyped] = useState(0)
+  const [reply, setReply] = useState(null) // คำตอบของคู่สนทนาหลังผู้เล่นเลือกตัวเลือก
+  const gives = useRef([]) // ของที่ได้จากตัวเลือก (ให้ตอนดูจบครั้งแรก)
+  const [hint, setHint] = useState(false) // โหมดโจทย์: ขอคำใบ้ = เผยคำอ่าน/คำแปล
   const timer = useRef(null)
   useEffect(() => { preloadVoices(); return () => stopVoice() }, [])
   const scenes = typeof part.scenes === 'function' ? part.scenes(pet.species) : part.scenes
   const end = i >= scenes.length
   const sc = end ? null : scenes[i]
-  const ko = sc ? fill(sc.ko) : ''
+  const line = reply || sc // บรรทัดที่กำลังแสดง: คำตอบหลังเลือก หรือบทของฉาก
+  const ko = line ? fill(line.ko) : ''
+  const choosing = !!sc?.options && !reply
+  const quizHide = !!sc?.quiz && choosing && !hint // โจทย์ทดสอบ: ซ่อนคำแปล/คำอ่านไว้ก่อน ไม่ให้เฉลยในตัวโจทย์
+  // สลับลำดับตัวเลือกทุกครั้งที่เข้าฉาก ไม่ให้ข้อถูกอยู่ที่เดิม
+  const options = useMemo(() => (sc?.options ? [...sc.options].sort(() => Math.random() - 0.5) : null), [i]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setHint(false) }, [i])
 
   useEffect(() => {
-    if (!sc) return undefined
+    if (!line) return undefined
     setTyped(0)
-    playLine({ who: sc.who, text: voiceText(ko), gender: player.look?.gender, species: pet.species })
+    const gender = player.look?.gender
+    const say = () => playLine({ who: line.who, text: voiceText(ko), gender, species: pet.species })
+    if (reply?.said) playLine({ who: 'me', text: voiceText(reply.said.ko), gender, species: pet.species, onDone: say }) // พูดตัวเลือกที่เลือกก่อน แล้วคู่สนทนาตอบ
+    else say()
     let n = 0
     timer.current = setInterval(() => { n += 1; setTyped(n); if (n >= ko.length) clearInterval(timer.current) }, 45)
     return () => clearInterval(timer.current)
-  }, [i]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [i, reply]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const tap = () => {
     if (end) return
     if (typed < ko.length) { clearInterval(timer.current); setTyped(ko.length); return }
+    if (choosing) return
+    if (reply) { const r = reply; setReply(null); if (!r.retry) setI(i + 1); return } // ตอบผิด = ถามใหม่ ตอบถูก = ไปต่อ
     setI(i + 1)
   }
 
+  const pick = (o) => {
+    if (o.ok !== false && o.give) gives.current.push(o.give)
+    setReply({ ...o.reply, said: o, retry: o.ok === false })
+  }
+
   const show = sc?.show || {}
-  const who = sc?.who
+  const who = line?.who
   const stage = stageFor(pet.growth).id
   const petStage = show.pet ? (stage === 'egg' ? 'baby' : stage) : 'baby'
-  const speaker = who === 'gran' ? WHO.gran : who === 'me' ? { ko: player.name, th: `Lv.${levelInfo(player.xp).level}` } : who === 'pet' ? { ko: pet.name, th: sp.th } : null
-  const vocab = [...new Map(scenes.flatMap((s) => s.vocab || []).map((v) => [v.ko, v])).values()]
+  const speaker = who === 'gran' || who === 'vendor' ? WHO[who] : who === 'me' ? { ko: player.name, th: `Lv.${levelInfo(player.xp).level}` } : who === 'pet' ? { ko: pet.name, th: sp.th } : null
+  const vocab = [...new Map(scenes.flatMap((s) => [...(s.vocab || []), ...(s.options || []).flatMap((o) => (o.ok === false ? [] : o.vocab || []))]).map((v) => [v.ko, v])).values()]
   const first = !state.story?.seen?.[part.id] && !replay
 
   return (
@@ -71,6 +95,7 @@ export default function StoryScene({ part, onDone, replay = false }) {
         <>
           <div className="story-stage">
             {show.gran && <div className={`st-char ${who === 'gran' ? 'talk' : ''}`}><Sprite grid={GRAN} pal={GRAN_PAL} outline="#1b1424" scale={7} className="bob" /></div>}
+            {show.vendor && <div className={`st-char ${who === 'vendor' ? 'talk' : ''}`}><Sprite grid={VENDOR} pal={VENDOR_PAL} outline="#1b1424" scale={7} className="bob" /></div>}
             {show.avatar && <div className={`st-char ${who === 'me' ? 'talk' : ''}`}><Avatar scale={6} mood={sc.pose === 'happy' ? 'happy' : 'normal'} className="idle" /></div>}
             {show.book && <div className="st-char st-prop"><Sprite grid={NOTEBOOK} pal={{ k: '#1b1424', b: '#4f8cff', w: '#fff' }} scale={5} className="bob" /></div>}
             {show.egg && (
@@ -82,14 +107,26 @@ export default function StoryScene({ part, onDone, replay = false }) {
             )}
             {show.pet && <div className={`st-char ${who === 'pet' ? 'talk' : ''}`}><Pet stage={petStage} mood={sc.pose === 'happy' ? 'happy' : 'normal'} scale={petStage === 'adult' ? 5 : 6} outfit={pet.outfit} className="bob" /></div>}
           </div>
-          <div className="story-box pixel-box">
+          <div className={`story-box pixel-box ${reply ? (reply.retry ? 'wrong' : 'right') : ''}`}>
             {speaker && <div className="story-name"><b className="ko">{speaker.ko}</b> <small className="muted">{speaker.th}</small></div>}
             <div className="story-ko ko">{ko.slice(0, typed)}<span className="caret">{typed < ko.length ? '▌' : ''}</span></div>
-            <div className={`story-sub ${typed >= ko.length ? 'on' : ''}`}>
-              <small className="read">{fill(sc.read)}</small>
-              <span>{fill(sc.th)}</span>
+            <div className={`story-sub ${typed >= ko.length && !quizHide ? 'on' : ''}`}>
+              <small className="read">{fill(line.read)}</small>
+              <span>{fill(line.th)}</span>
             </div>
-            <small className="story-next muted">{typed >= ko.length ? '▼ แตะเพื่อไปต่อ' : ''}</small>
+            {choosing && typed >= ko.length && (
+              <div className="story-opts" onClick={(e) => e.stopPropagation()}>
+                {options.map((o) => (
+                  <button key={o.ko} className="story-opt" onClick={() => pick(o)}>
+                    <b className="ko">{o.ko}</b>
+                    {!quizHide && <small className="read">{o.read}</small>}
+                    {!quizHide && <small>{o.th}</small>}
+                  </button>
+                ))}
+                {quizHide && <button className="hint-btn" onClick={() => setHint(true)}>💡 ขอคำใบ้ (ดูคำอ่านและคำแปล)</button>}
+              </div>
+            )}
+            <small className="story-next muted">{typed >= ko.length && !choosing ? (reply?.retry ? '▼ แตะเพื่อลองใหม่' : '▼ แตะเพื่อไปต่อ') : ''}</small>
           </div>
           <div className="dots story-dots">{scenes.map((_, k) => <span key={k} className={k === i ? 'cur' : k < i ? 'done' : ''} />)}</div>
         </>
@@ -106,8 +143,8 @@ export default function StoryScene({ part, onDone, replay = false }) {
               </div>
             </>
           )}
-          {first && <div className="rewards"><span className="reward gold">+{STORY_REWARD} 🪙</span></div>}
-          <button className="pixel-btn primary" onClick={onDone}>{replay ? 'ปิด' : '계속! ไปต่อ'}</button>
+          {first && <div className="rewards"><span className="reward gold">+{STORY_REWARD} 🪙</span>{gives.current.map((id, k) => <span key={k} className="reward">{FOOD_BY_ID[id]?.icon} {FOOD_BY_ID[id]?.th}</span>)}</div>}
+          <button className="pixel-btn primary" onClick={() => onDone(gives.current)}>{replay ? 'ปิด' : '계속! ไปต่อ'}</button>
         </div>
       )}
     </div>

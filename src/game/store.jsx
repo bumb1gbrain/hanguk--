@@ -414,7 +414,9 @@ function step(state, a) {
 
     case 'STORY_SEEN': { // ดูจบช่วงเรื่องครั้งแรก: ได้เหรียญครั้งเดียว (ดูซ้ำได้แต่ไม่ได้เพิ่ม)
       if (!PART_BY_ID[a.id] || s.story?.seen?.[a.id]) return s
-      return { ...s, story: { seen: { ...(s.story?.seen || {}), [a.id]: Date.now() } }, player: { ...s.player, coins: s.player.coins + STORY_REWARD } }
+      const inventory = { ...s.inventory }
+      for (const id of a.give || []) if (FOOD_BY_ID[id]) inventory[id] = (inventory[id] || 0) + 1 // อาหารที่ได้จากตัวเลือกในเรื่อง
+      return { ...s, inventory, story: { seen: { ...(s.story?.seen || {}), [a.id]: Date.now() } }, player: { ...s.player, coins: s.player.coins + STORY_REWARD } }
     }
 
     case 'DISMISS':

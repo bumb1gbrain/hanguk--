@@ -3,13 +3,13 @@
 // ข้ามบรรทัดที่มีไฟล์อยู่แล้ว · เปลี่ยนบทพูด/เสียง → รันซ้ำเพื่อสร้างเฉพาะที่ขาด (ลบไฟล์เก่าที่ไม่ใช้แล้วด้วย --prune)
 import fs from 'node:fs'
 import path from 'node:path'
-import { ALL_PARTS } from '../src/data/story.js'
+import { ALL_PARTS, linesOf } from '../src/data/story.js'
 import { SPECIES_LIST } from '../src/pixel/pets.js'
 import { VOICE_PROFILES } from '../src/game/voices.js'
 import { voiceKey, voiceText } from '../src/game/voiceKey.js'
 
 const OUT = path.resolve('public/voice')
-const PROSODY = { narr: { rate: '-5%', pitch: '-2%' }, gran: { rate: '-18%', pitch: '-8%' }, me_f: { rate: '0%', pitch: '0%' }, me_m: { rate: '0%', pitch: '0%' } }
+const PROSODY = { vendor: { rate: '+5%', pitch: '0%' }, narr: { rate: '-5%', pitch: '-2%' }, gran: { rate: '-18%', pitch: '-8%' }, me_f: { rate: '0%', pitch: '0%' }, me_m: { rate: '0%', pitch: '0%' } }
 const run = process.argv.includes('--run')
 const prune = process.argv.includes('--prune')
 
@@ -19,10 +19,12 @@ for (const part of ALL_PARTS) {
   for (const sp of SPECIES_LIST) {
     const scenes = typeof part.scenes === 'function' ? part.scenes(sp.id) : part.scenes
     for (const sc of scenes) {
-      if (sc.who === 'pet') continue // เสียงสัตว์เลี้ยงใช้เสียงร้องสังเคราะห์
-      if (sc.ko.includes('{name}')) { console.warn('ข้าม (มีชื่อผู้เล่น):', sc.ko); continue }
-      const text = voiceText(fill(sc.ko, sp))
-      for (const speaker of sc.who === 'me' ? ['me_f', 'me_m'] : [sc.who]) jobs.set(voiceKey(speaker, text), { speaker, text })
+      for (const ln of linesOf(sc)) { // รวมตัวเลือก (พูดด้วยเสียงผู้เล่น) และคำตอบของคู่สนทนา
+        if (ln.who === 'pet') continue // เสียงสัตว์เลี้ยงใช้เสียงร้องสังเคราะห์
+        if (ln.ko.includes('{name}')) { console.warn('ข้าม (มีชื่อผู้เล่น):', ln.ko); continue }
+        const text = voiceText(fill(ln.ko, sp))
+        for (const speaker of ln.who === 'me' ? ['me_f', 'me_m'] : [ln.who]) jobs.set(voiceKey(speaker, text), { speaker, text })
+      }
     }
   }
 }

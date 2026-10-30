@@ -433,7 +433,7 @@ export default function App() {
       {lesson && <LessonView lesson={lesson} onClose={() => setLesson(null)} />}
       {settings && <Settings onClose={() => setSettings(false)} />}
       {!state.onboarded && <Onboarding onStart={(skip) => setLesson(suggestLesson(new Date(), {}, skip))} />}
-      {story && <StoryScene key={story.id} part={story} onDone={() => dispatch({ type: 'STORY_SEEN', id: story.id })} />}
+      {story && <StoryScene key={story.id} part={story} onDone={(give) => dispatch({ type: 'STORY_SEEN', id: story.id, give: Array.isArray(give) ? give : [] })} />}
       {state.onboarded && !story && notice && <Notice n={notice} onClose={() => dispatch({ type: 'DISMISS' })} />}
     </div>
   )
