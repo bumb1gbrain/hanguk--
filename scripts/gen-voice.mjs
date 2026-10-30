@@ -1,6 +1,6 @@
 // สร้างเสียงพากย์สำเร็จรูปของฉากเรื่องราวด้วย Supertonic 2 (โอเพนซอร์ส รันในเครื่อง ฟรี ไม่ต้องสมัคร) → public/voice/*.m4a + manifest.json
 // ใช้: npm run voice            (นับจำนวนบรรทัด ไม่สร้าง)
-//      npm run voice -- --run   (สร้างเฉพาะบรรทัดที่ยังไม่มีไฟล์) · เพิ่ม --prune เพื่อลบไฟล์ที่ไม่ใช้แล้ว
+//      npm run voice -- --run   (สร้างเฉพาะบรรทัดที่ยังไม่มีไฟล์) · เพิ่ม --prune เพื่อลบไฟล์ที่ไม่ใช้แล้ว · --force = สร้างใหม่ทั้งหมด
 // ครั้งแรกจะสร้าง .voice-venv และติดตั้ง supertonic ให้เอง (ต้องมี python3) แล้วโหลดโมเดลครั้งเดียว ~260MB
 // เสียงของแต่ละตัวละครกำหนดที่ VOICE_PROFILES[...].st ใน src/game/voices.js
 import fs from 'node:fs'
@@ -17,6 +17,7 @@ const VENV = path.resolve('.voice-venv')
 const PY = path.join(VENV, 'bin', 'python')
 const run = process.argv.includes('--run')
 const prune = process.argv.includes('--prune')
+const force = process.argv.includes('--force') // สร้างใหม่ทุกไฟล์ (เช่น หลังปรับการคัดเทค/ความดัง)
 
 const fill = (t, sp) => t.replaceAll('{pet}', sp.name).replaceAll('{sound}', sp.sound.ko)
 const jobs = new Map() // key → { speaker, text }
@@ -53,7 +54,7 @@ if (!fs.existsSync(PY)) {
 fs.mkdirSync(OUT, { recursive: true })
 const hasAac = spawnSync('afconvert', ['-h'], { stdio: 'ignore' }).error == null // macOS: บีบอัดเป็น m4a ให้ไฟล์เล็ก
 const ext = hasAac ? 'm4a' : 'wav'
-const todo = [...jobs].filter(([k]) => !fs.existsSync(path.join(OUT, `${k}.${ext}`)))
+const todo = [...jobs].filter(([k]) => force || !fs.existsSync(path.join(OUT, `${k}.${ext}`)))
 console.log(`ต้องสร้างใหม่ ${todo.length} บรรทัด (มีอยู่แล้ว ${jobs.size - todo.length})`)
 
 if (todo.length) {
