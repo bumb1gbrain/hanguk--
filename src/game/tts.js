@@ -52,14 +52,15 @@ function notify(reason) {
 }
 
 // onDone: เรียกเมื่ออ่านจบ (หรือเลิกอ่าน) เพียงครั้งเดียว — ใช้ต่อคิวในชุดเสียง
-function say(text, rate, retries = 1, onDone) {
+function say(text, rate, retries = 1, onDone, opts = {}) {
   const synth = window.speechSynthesis
   if (!koVoice) pickVoice() // เสียงอาจโหลดช้า ลองเลือกใหม่ทุกครั้งที่ยังไม่มี
   if (!koVoice && !noVoiceNotified && synth.getVoices().length) { noVoiceNotified = true; notify('no-voice') }
   const u = new SpeechSynthesisUtterance(text)
   u.lang = 'ko-KR'
   u.rate = rate
-  if (koVoice) u.voice = koVoice
+  u.pitch = opts.pitch ?? 1
+  if (opts.voice || koVoice) u.voice = opts.voice || koVoice
   let started = false
   u.onstart = () => { started = true; clearTimeout(watchdog) }
   u.onend = u.onerror = () => {
@@ -78,12 +79,13 @@ function say(text, rate, retries = 1, onDone) {
     u.__retired = true
     synth.cancel()
     if (retries <= 0) { notify('stuck'); onDone?.(); return }
-    pendingTimer = setTimeout(() => { try { say(text, rate, retries - 1, onDone) } catch { /* ignore */ } }, 150)
+    pendingTimer = setTimeout(() => { try { say(text, rate, retries - 1, onDone, opts) } catch { /* ignore */ } }, 150)
   }, 1200)
 }
 
-export function speak(text, rate = prefs.rate) {
-  if (!supported() || !text) return
+export function speak(text, rate = prefs.rate, opts = {}, onDone) {
+  if (!supported() || !text) { onDone?.(); return }
+  if (opts.rateMul) rate = Math.max(0.5, Math.min(1.6, rate * opts.rateMul))
   seqToken++ // ยกเลิกชุดเสียงที่ค้างอยู่
   try {
     const synth = window.speechSynthesis
@@ -91,9 +93,9 @@ export function speak(text, rate = prefs.rate) {
     if (synth.speaking || synth.pending) {
       // cancel() แล้ว speak() ทันที เสียงใหม่จะถูกกลืน -> เว้นช่วงสั้น ๆ ให้คิวเคลียร์ก่อน
       synth.cancel()
-      pendingTimer = setTimeout(() => { try { say(text, rate) } catch { /* ignore */ } }, 80)
+      pendingTimer = setTimeout(() => { try { say(text, rate, 1, onDone, opts) } catch { /* ignore */ } }, 80)
     } else {
-      say(text, rate) // เรียกทันทีตอนอยู่ใน user gesture (iOS ต้องการ)
+      say(text, rate, 1, onDone, opts) // เรียกทันทีตอนอยู่ใน user gesture (iOS ต้องการ)
     }
   } catch { /* ignore */ }
 }
@@ -133,3 +135,11 @@ export function speakFor(item, { slow = false, quiz = false } = {}) {
 }
 
 export const hasKoreanVoice = () => { if (!koVoice) pickVoice(); return !!koVoice }
+
+// เสียงเกาหลีทั้งหมดในเครื่อง เรียงให้เสียงที่ผู้เล่นเลือกไว้มาก่อน (ใช้แจกเสียงต่างกันให้ตัวละครแต่ละคน)
+export function voicesForCast() {
+  const all = listKoVoices()
+  const first = prefs.voice && all.find((v) => v.name === prefs.voice)
+  return first ? [first, ...all.filter((v) => v !== first)] : all
+}
+export const stopSpeaking = () => { if (supported()) { seqToken++; clearTimeout(pendingTimer); try { window.speechSynthesis.cancel() } catch { /* ignore */ } } }

@@ -14,6 +14,7 @@ import GearPreview from '../components/GearPreview.jsx'
 import { GEAR_BY_ID } from '../data/shop.js'
 import { salePrice, FEATURED_DISCOUNT } from '../game/loot.js'
 import { speak, speakSeq } from '../game/tts.js'
+import { playCry } from '../game/cry.js'
 import { SPECIES, SPECIES_LIST } from '../pixel/pets.js'
 import { ALL_PARTS } from '../data/story.js'
 import { TRICKS, bondInfo } from '../data/tricks.js'
@@ -110,7 +111,7 @@ export default function Home({ openLesson, go }) {
     dispatch({ type: 'PET_TAP' })
     setBounce((b) => b + 1); later(() => setBounce(0), 700)
     burst('❤️', 3)
-    speak(speciesInfo.sound.ko)
+    if (!playCry(pet.species)) speak(speciesInfo.sound.ko)
   }
 
   // กอด: ตัวละครเดินไปหาสัตว์เลี้ยงแล้วกอด (คูลดาวน์ 45 วินาที)

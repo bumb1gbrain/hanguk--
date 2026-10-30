@@ -114,3 +114,8 @@ src/
 - ไข่ตัวแรกเลือกได้ตอน Onboarding (`ONBOARD.species`, ทุกสายพันธุ์ฟรี) · สีไข่ต่อสายพันธุ์อยู่ใน `EGG_PAL` (pets.js) · c1_tale เป็นฟังก์ชัน `scenes(species)` ได้นิทานประจำสายพันธุ์
 - ฉากหลังเรื่อง: `StoryBackdrop.jsx` (shop/room/night) · เรื่องเล่นก่อนป๊อปอัปแจ้งเตือนเสมอ · แถบเตือนเสียงย้ายขึ้นบนขณะดูเรื่อง (`body:has(.story)`)
 - ตัวละครแยกเพศ: `avatarBase(gender)` (ฐานชาย/หญิง) · `fitToBody()` ตัดเสื้อที่ล้นลำตัวหญิง · `hipFit()` ขยายสะโพกกางเกง/กระโปรงหญิง · ทรงผมมี `g: m|f|any` (`hairFor`) · ไอเทมเฉพาะเพศใส่ `{ gender: 'm'|'f' }` ใน items.js (ใส่ข้ามเพศได้ มีป้าย ♂/♀)
+
+## เสียงพากย์ในฉากเรื่อง
+- `src/game/voices.js` → `playLine({who,text,gender,species})`: ผู้พูดแต่ละคนเสียงต่างกัน — narr/gran/me_f/me_m มีโปรไฟล์ (ระดับเสียง/ความเร็ว/ลำดับเสียงในเครื่อง) · pet ใช้เสียงร้องสังเคราะห์ `src/game/cry.js` (Web Audio ต่อสายพันธุ์) · ผู้เล่นใช้เสียงตามเพศตัวละคร
+- เสียงสำเร็จรูปคุณภาพสูง (ไม่บังคับ): `AZURE_SPEECH_KEY=… AZURE_SPEECH_REGION=koreacentral npm run voice -- --run` → สร้าง `public/voice/*.mp3` + `manifest.json` (คีย์จาก `voiceKey.js`) · ถ้ามีไฟล์จะเล่นไฟล์ก่อน ไม่มีก็ถอยไปใช้ Web Speech · ไม่ใส่ `--run` = แค่นับตัวอักษร
+- ถ้าแก้บทพูดในเรื่อง ให้รัน `npm run voice -- --run --prune` ใหม่เพื่อสร้างเฉพาะบรรทัดที่เปลี่ยน

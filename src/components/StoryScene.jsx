@@ -5,6 +5,8 @@ import Sprite from '../pixel/Sprite.jsx'
 import { SPECIES } from '../pixel/pets.js'
 import { stageFor, levelInfo } from '../game/logic.js'
 import { speak } from '../game/tts.js'
+import { playLine, stopVoice, preloadVoices } from '../game/voices.js'
+import { voiceText } from '../game/voiceKey.js'
 import { CHAPTERS, STORY_REWARD } from '../data/story.js'
 import StoryBackdrop from './StoryBackdrop.jsx'
 
@@ -29,6 +31,7 @@ export default function StoryScene({ part, onDone, replay = false }) {
   const [i, setI] = useState(0)
   const [typed, setTyped] = useState(0)
   const timer = useRef(null)
+  useEffect(() => { preloadVoices(); return () => stopVoice() }, [])
   const scenes = typeof part.scenes === 'function' ? part.scenes(pet.species) : part.scenes
   const end = i >= scenes.length
   const sc = end ? null : scenes[i]
@@ -37,7 +40,7 @@ export default function StoryScene({ part, onDone, replay = false }) {
   useEffect(() => {
     if (!sc) return undefined
     setTyped(0)
-    speak(ko.replace(/[“”?!~…]/g, ''))
+    playLine({ who: sc.who, text: voiceText(ko), gender: player.look?.gender, species: pet.species })
     let n = 0
     timer.current = setInterval(() => { n += 1; setTyped(n); if (n >= ko.length) clearInterval(timer.current) }, 45)
     return () => clearInterval(timer.current)
