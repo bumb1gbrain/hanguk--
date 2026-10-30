@@ -64,6 +64,14 @@ for (const t of lessonTexts) for (const { speaker } of Object.values(TEACHERS)) 
 const otherTexts = new Set([...FOODS.map((f) => f.ko), ...GEAR.map((g) => g.ko), ...TRICKS.map((t) => t.ko), ...Object.values(MOOD_TEXT).map((m) => m.ko), '행복해요', '사랑해', '스트릭 보호'])
 for (const t of otherTexts) for (const { speaker } of Object.values(TEACHERS)) addJob(speaker, t, { takes: 5 })
 
+// คำศัพท์ในหน้าสรุปหลังจบฉาก (ปุ่ม 🔊 ใช้เสียงครู) — เฉพาะความเร็วปกติ
+const storyVocab = new Set()
+for (const part of ALL_PARTS) for (const sp of SPECIES_LIST) {
+  const scenes = typeof part.scenes === 'function' ? part.scenes(sp.id) : part.scenes
+  for (const sc of scenes) for (const v of [...(sc.vocab || []), ...(sc.options || []).flatMap((o) => o.vocab || [])]) if (!v.ko.includes('{')) storyVocab.add(v.ko)
+}
+for (const t of storyVocab) for (const { speaker } of Object.values(TEACHERS)) addJob(speaker, t)
+
 const chars = [...jobs.values()].reduce((n, j) => n + j.text.length, 0)
 console.log(`บรรทัดเสียง ${jobs.size} ไฟล์ · ${chars} ตัวอักษร`)
 const dump = process.argv.find((a) => a.startsWith('--dump-jobs='))?.split('=')[1] // ส่งรายการ {คีย์: {speaker, text}} ให้สคริปต์ตรวจเสียง

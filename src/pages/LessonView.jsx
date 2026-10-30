@@ -9,7 +9,7 @@ import { SpeakBtn } from '../components/ui.jsx'
 import { Pet } from '../pixel/Characters.jsx'
 import SyllableGame from './SyllableGame.jsx'
 import { isSyllable, decompose, LEAD, VOWEL, TAIL } from '../game/hangul.js'
-import { stageFor, lessonReward } from '../game/logic.js'
+import { stageFor, lessonReward, isPassed, passedNow, PASS_PCT } from '../game/logic.js'
 import { dayStr } from '../game/logic.js'
 
 export default function LessonView({ lesson, onClose }) {
@@ -53,9 +53,9 @@ export default function LessonView({ lesson, onClose }) {
   const finish = (correct, total, missed = []) => {
     // คำนวณด้วยสูตรเดียวกับ reducer จากสถานะก่อน dispatch เพื่อโชว์รางวัลที่ได้จริง
     const paid = state.daily.date === dayStr() ? (state.daily.lessons || {})[lesson.id] : undefined
-    const r = lessonReward({ correct, total, hadBefore: !!state.lessons[lesson.id], paid })
+    const r = lessonReward({ correct, total, hadBefore: isPassed(state.lessons[lesson.id]), paid })
     dispatch({ type: 'LESSON_DONE', lessonId: lesson.id, correct, total, itemIds: items.map((x) => x.id), missedIds: missed.map((x) => x.id) })
-    setResult({ correct, total, missed, xp: r.xp, coins: r.coins, happy: r.happy, repeat: !!paid || !!state.lessons[lesson.id], paid: !!paid })
+    setResult({ correct, total, missed, xp: r.xp, coins: r.coins, happy: r.happy, pass: passedNow(correct, total), repeat: !!paid || isPassed(state.lessons[lesson.id]), paid: !!paid })
     setPhase('result')
   }
 
@@ -130,8 +130,11 @@ export default function LessonView({ lesson, onClose }) {
       {phase === 'result' && result && (
         <div className="result">
           <Pet stage={stageFor(state.pet.growth).id} mood="happy" scale={8} className="bob" />
-          <h2>{result.correct === result.total ? '완벽해요! 🌟' : result.correct >= result.total / 2 ? '잘했어요! 👍' : '괜찮아요! 💪'}</h2>
+          <h2>{result.correct === result.total ? '완벽해요! 🌟' : result.pass ? '잘했어요! 👍' : '다시 해 봐요! 💪'}</h2>
           <p>ตอบถูก {result.correct}/{result.total} ข้อ</p>
+          {!result.pass && (
+            <p className="warn">ยังไม่ผ่านบทนี้ — ต้องถูกอย่างน้อย {PASS_PCT}% ({Math.ceil((result.total * PASS_PCT) / 100)}/{result.total} ข้อ) ถึงนับว่าเรียนจบและได้รางวัลเต็ม คำในบทนี้ถูกเก็บเข้า “ทบทวน” แล้ว ลองอีกรอบได้เลย</p>
+          )}
           {result.xp + result.coins > 0 ? (
             <div className="rewards">
               <span className="reward">+{result.xp} XP</span>
@@ -166,8 +169,9 @@ export default function LessonView({ lesson, onClose }) {
               : 'คำในบทนี้ถูกเพิ่มเข้า “ทบทวน” แล้ว จะกลับมาให้ทวนพรุ่งนี้'}
           </p>
           <div className="row gap">
-            <button className="pixel-btn" onClick={() => { setIdx(0); setPhase('study') }}>เรียนซ้ำ</button>
-            <button className="pixel-btn primary" onClick={onClose}>กลับ</button>
+            <button className={`pixel-btn ${result.pass ? '' : 'primary'}`} onClick={() => { setIdx(0); setPhase('study') }}>{result.pass ? 'เรียนซ้ำ' : 'ทบทวนบทแล้วลองใหม่'}</button>
+            {!result.pass && <button className="pixel-btn" onClick={startQuiz}>ลองทำแบบทดสอบอีกครั้ง</button>}
+            <button className={`pixel-btn ${result.pass ? 'primary' : ''}`} onClick={onClose}>กลับ</button>
           </div>
         </div>
       )}

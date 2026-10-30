@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useGame, dueItems } from '../game/store.jsx'
-import { DAILY_GOAL, MOOD_TEXT, petMood, stageFor, nextStage, levelInfo, liveStreak, dayStr, neglected, rankFor } from '../game/logic.js'
+import { DAILY_GOAL, MOOD_TEXT, petMood, stageFor, nextStage, levelInfo, liveStreak, dayStr, neglected, rankFor, passedLessons } from '../game/logic.js'
 import { suggestLesson } from '../data/lessons.js'
 import { ROUTINE } from '../data/routine.js'
 import { FOODS, FOOD_BY_ID } from '../data/shop.js'
@@ -17,7 +17,7 @@ import { speak, speakSeq } from '../game/lessonVoice.js'
 import { playCry } from '../game/cry.js'
 import { SPECIES, SPECIES_LIST } from '../pixel/pets.js'
 import { ALL_PARTS } from '../data/story.js'
-import { TRICKS, bondInfo } from '../data/tricks.js'
+import { TRICKS, bondInfo, EGG_PHRASES, EGG_TALK_CAP } from '../data/tricks.js'
 import PetHouse from '../components/PetHouse.jsx'
 import StoryScene, { StoryBook } from '../components/StoryScene.jsx'
 
@@ -54,7 +54,7 @@ export default function Home({ openLesson, go }) {
   const mood = petMood(pet)
   const stage = stageFor(pet.growth)
   const next = nextStage(pet.growth)
-  const sug = suggestLesson(now, state.lessons, player.skipHangul)
+  const sug = suggestLesson(now, passedLessons(state.lessons), player.skipHangul)
   const due = dueItems(state.srs).length
   const room = player.room || {}
   const studiedToday = daily.xp > 0
@@ -108,10 +108,27 @@ export default function Home({ openLesson, go }) {
   // แตะสัตว์เลี้ยง: ร้องเสียงประจำสายพันธุ์ + หัวใจ
   const tapPet = () => {
     if (pet.asleep) { setBounce((b) => b + 1); later(() => setBounce(0), 700); burst('💤', 2); return }
-    dispatch({ type: 'PET_TAP' })
+    if ((daily.petTaps || 0) >= 10) { // แตะครบโควตาความผูกพันของวันแล้ว: ยังเล่นเสียงได้ แต่บอกให้รู้ว่าไม่ได้อะไรเพิ่ม
+      setFx(`${pet.name} ชอบนะ! แต่วันนี้แตะเก็บความผูกพันครบแล้ว — ลองให้อาหาร เล่น หรือกอดแทน`)
+      later(() => setFx(''), 3500)
+    } else dispatch({ type: 'PET_TAP' })
     setBounce((b) => b + 1); later(() => setBounce(0), 700)
     burst('❤️', 3)
     if (!playCry(pet.species)) speak(speciesInfo.sound.ko)
+  }
+
+  // พูดกับไข่: ทักทายเป็นภาษาเกาหลี ไข่สั่นตอบ + โตเร็วขึ้น (วันละ 3 ครั้ง)
+  const eggTalks = daily.eggTalk || 0
+  const [eggLine, setEggLine] = useState(null)
+  const talkEgg = () => {
+    if (eggTalks >= EGG_TALK_CAP || pet.asleep) return
+    const ph = EGG_PHRASES[(eggTalks + (daily.date ? new Date(daily.date).getDate() : 0)) % EGG_PHRASES.length]
+    dispatch({ type: 'EGG_TALK' })
+    setEggLine(ph)
+    speak(ph.ko)
+    setBounce((b) => b + 1); later(() => setBounce(0), 700)
+    burst('💬', 2); burst('❤️', 2)
+    later(() => setEggLine(null), 3500)
   }
 
   // กอด: ตัวละครเดินไปหาสัตว์เลี้ยงแล้วกอด (คูลดาวน์ 45 วินาที)
@@ -137,6 +154,7 @@ export default function Home({ openLesson, go }) {
   const boxReady = !daily.boxOpened && daily.xp > 0
   // ของที่อยากได้ที่ตอนนี้ซื้อได้แล้ว (เหรียญพอและเลเวลถึง)
   const wishReady = (player.wish || []).map((id) => GEAR_BY_ID[id]).filter((g) => g && !player.owned.includes(g.id) && levelInfo(player.xp).level >= g.level && player.coins >= salePrice(g, daily.featured))
+  const newbie = Object.keys(passedLessons(state.lessons)).length === 0 // ยังไม่เคยผ่านบทไหน → ซ่อนของขวัญ/ภารกิจไว้ก่อน ไม่ให้หน้าแรกรก
   const live = liveStreak(state.streak, dayStr(), player.freezes || 0)
   const goalPct = Math.min(daily.xp, goal)
 
@@ -224,9 +242,6 @@ export default function Home({ openLesson, go }) {
           <Bar label="พลัง" icon="⚡" value={pet.energy} color="var(--yellow)" />
           <Bar label="สะอาด" icon="🫧" value={pet.clean ?? 80} color="var(--blue, #6bb6ff)" />
           <div className="span2">
-            <Bar label={`💞 ความผูกพัน Lv.${bond.level}${bond.max ? ' (สูงสุด)' : ''}`} icon="" value={bond.into} max={bond.need} color="var(--pink)" />
-          </div>
-          <div className="span2">
             <Bar
               label={next ? (stage.id === 'egg' ? `🥚 ใกล้ฟักเป็น ${next.ko}` : `โต → ${next.ko}`) : 'โตเต็มวัยแล้ว'}
               icon="🌱"
@@ -258,11 +273,23 @@ export default function Home({ openLesson, go }) {
           <button className="pixel-btn act" disabled={pet.asleep} onClick={hug}><span className="act-ico">🤗</span><span className="ko">안기</span><small>กอด</small></button>
           <button className="pixel-btn act" onClick={() => dispatch({ type: 'SLEEP' })}><span className="act-ico">{pet.asleep ? '☀️' : '🌙'}</span><span className="ko">{pet.asleep ? '깨우기' : '재우기'}</span><small>{pet.asleep ? 'ปลุก' : 'พักผ่อน'}</small></button>
         </div>
+        {stage.id === 'egg' ? (
+          <div className="egg-talk">
+            <button className="pixel-btn act wide" disabled={pet.asleep || eggTalks >= EGG_TALK_CAP} onClick={talkEgg}>
+              <span className="act-ico">🥚</span><span className="ko">말 걸기</span><small>พูดกับไข่ · วันนี้ {eggTalks}/{EGG_TALK_CAP}</small>
+            </button>
+            {eggLine && <div className="egg-line"><b className="ko">{eggLine.ko}</b> <small>{eggLine.read} · {eggLine.th}</small></div>}
+            <small className="muted">ไข่ได้ยินเสียงเกาหลีแล้วโตเร็วขึ้น · อีกประมาณ {Math.max(1, Math.ceil((next.min - pet.growth) / 12))} บทที่เรียนผ่านจะฟักเป็นตัว และปลดล็อกการสอนคำสั่ง</small>
+          </div>
+        ) : (
         <details className="tricks">
           <summary>
             <span>🎓 สอนคำสั่ง · <span className="ko">훈련</span></span>
             <small className="muted">{canTrick ? `วันนี้ ${tricksDone.length}/${TRICKS.length} ท่า` : (pet.asleep ? 'กำลังหลับ' : pet.growth < 30 ? 'ต้องฟักไข่ก่อน' : 'พลังไม่พอ')}</small>
           </summary>
+          <div className="trick-bond">
+            <Bar label={`💞 ความผูกพัน Lv.${bond.level}${bond.max ? ' (สูงสุด)' : ''} — ปลดล็อกท่าใหม่เมื่อผูกพันสูงขึ้น`} icon="" value={bond.into} max={bond.need} color="var(--pink)" />
+          </div>
           <div className="trick-row">
             {TRICKS.map((t) => {
               const locked = bond.level < t.level
@@ -277,11 +304,18 @@ export default function Home({ openLesson, go }) {
             })}
           </div>
         </details>
+        )}
       </section>
 
       {/* ── ของขวัญวันนี้: กล่องสุ่มฟรี + ของเด่นลดราคา + ของที่อยากได้ ── */}
-      <section className="card pixel-box gift">
-        <div className="row between"><b>🎁 ของขวัญวันนี้</b><small className="muted">เปลี่ยนทุกวัน</small></div>
+      {newbie ? (
+        <p className="unlock-hint muted">🎁 ของขวัญและ 🎯 ภารกิจประจำวันจะเปิดหลังเรียนผ่านบทแรก</p>
+      ) : (<>
+      <details className="card pixel-box gift" open={boxReady || wishReady.length > 0}>
+        <summary className="row between">
+          <b>🎁 ของขวัญวันนี้</b>
+          <small className={boxReady ? 'good-fx' : 'muted'}>{boxReady ? 'เปิดกล่องได้แล้ว!' : daily.boxOpened ? 'เปิดแล้ว' : featured ? `ของเด่น -${Math.round(FEATURED_DISCOUNT * 100)}%` : 'เปลี่ยนทุกวัน'}</small>
+        </summary>
         <div className="gift-row">
           <button className={`gift-box ${boxReady ? 'ready' : ''}`} disabled={!boxReady} onClick={() => dispatch({ type: 'OPEN_BOX', kind: 'free' })}>
             <span className="gift-ico">{daily.boxOpened ? '📭' : '🎁'}</span>
@@ -298,7 +332,7 @@ export default function Home({ openLesson, go }) {
         {wishReady.length > 0 && (
           <button className="wish-ready" onClick={() => go('shop')}>★ ของที่อยากได้ซื้อได้แล้ว: <b className="ko">{wishReady[0].ko}</b>{wishReady.length > 1 ? ` และอีก ${wishReady.length - 1} ชิ้น` : ''} ▶</button>
         )}
-      </section>
+      </details>
 
       {/* ── ภารกิจ: พับเก็บอัตโนมัติเมื่อรับครบ ── */}
       <details className="card pixel-box quests" open={claimed.length < quests.length}>
@@ -327,6 +361,7 @@ export default function Home({ openLesson, go }) {
         </div>
         <small className="muted">ครบทั้ง {quests.length} ข้อ โบนัส +{QUEST_ALL_BONUS} 🪙</small>
       </details>
+      </>)}
 
       {bookOpen && !replay && <StoryBook onClose={() => setBookOpen(false)} onPlay={setReplay} />}
       {replay && <StoryScene part={replay} replay onDone={() => setReplay(null)} />}

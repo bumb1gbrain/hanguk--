@@ -16,14 +16,23 @@ export const LESSON_REPEAT_MULT = 0.5
 export const STREAK_BONUS = { 3: 20, 7: 50, 14: 80, 30: 150, 60: 300, 100: 500 } // วันที่ -> เหรียญ
 
 // paid = รางวัลที่จ่ายไปแล้ววันนี้สำหรับบทนี้ ({ xp, coins, growth, m }) หรือ undefined
-// รางวัลสเกลตามความแม่นยำ (acc = ถูก/ทั้งหมด): ตอบถูกหมดได้เต็ม 50 XP ตอบผิดเกือบหมดได้แค่ ~8 XP
+// รางวัลสเกลตามความแม่นยำ (acc = ถูก/ทั้งหมด): ตอบถูกหมดได้เต็ม 50 XP · ถึงเกณฑ์ผ่านได้ ≥ ~38 XP · ไม่ถึงเกณฑ์ได้ 4 XP
+// เกณฑ์ผ่านบท: ตอบถูกอย่างน้อย 60% ถึงนับว่า "เรียนจบ" (ปลดล็อกตอนเรื่อง/ความสำเร็จ/บทแนะนำถัดไป)
+// ต่ำกว่านี้ได้แค่ XP ปลอบใจนิดเดียว ไม่ได้เหรียญ และคำในบทยังถูกเก็บเข้า "ทบทวน" ให้
+export const PASS_PCT = 60
+export const passedNow = (correct, total) => total > 0 && (correct / total) * 100 >= PASS_PCT
+export const isPassed = (e) => !!e && e.passed !== false // เซฟเก่าไม่มีธง passed ถือว่าผ่านแล้ว
+export const passedLessons = (ls = {}) => Object.fromEntries(Object.entries(ls).filter(([, e]) => isPassed(e)))
+
 export function lessonReward({ correct, total, hadBefore, paid }) {
   const acc = total > 0 ? correct / total : 0
+  const pass = passedNow(correct, total)
   const m = paid ? paid.m : hadBefore ? LESSON_REPEAT_MULT : 1
-  const full = { xp: 8 + 42 * acc, coins: 3 + 9 * acc, growth: 6 + 8 * acc }
+  const full = pass ? { xp: 8 + 42 * acc, coins: 3 + 9 * acc, growth: 6 + 8 * acc } : { xp: 4, coins: 0, growth: 1 }
   const out = { m }
   for (const k of Object.keys(full)) out[k] = Math.max(0, Math.round(full[k] * m) - (paid?.[k] || 0))
-  out.happy = paid ? 0 : 12
+  out.happy = paid ? 0 : pass ? 12 : 2
+  out.pass = pass
   return out
 }
 
@@ -173,11 +182,38 @@ const shuffle = (a) => {
 }
 export { shuffle }
 
+// โจทย์เรียงชิ้นส่วน: คำที่มีหลายพยางค์ → เรียงพยางค์ · ประโยคที่มีหลายคำ → เรียงคำ · ตัวอักษรใช้ "คำตัวอย่าง" (it.ex) แทน
+// คืน null ถ้าไม่เหมาะ (สั้นเกินไป/ยาวเกินไป/ชิ้นส่วนซ้ำกันจนเรียงสลับแล้วเท่ากัน)
+const HANGUL_SYL = /[가-힣]/
+export function orderTarget(it) {
+  const t = it.kind === 'letter' ? it.ex : it
+  if (!t?.ko) return null
+  const clean = t.ko.replace(/[?!.,~…“”]/g, '').trim()
+  const words = clean.split(/\s+/).filter(Boolean)
+  const parts = words.length >= 3 ? words : words.length === 1 ? [...clean].filter((c) => HANGUL_SYL.test(c)) : words.length === 2 && clean.replace(/\s/g, '').length <= 5 ? [...clean].filter((c) => HANGUL_SYL.test(c)) : words
+  if (parts.length < 2 || parts.length > 6 || new Set(parts).size < 2) return null
+  return { ko: t.ko, read: t.read, th: t.th, parts, join: words.length >= 3 ? ' ' : '' }
+}
+
 export function buildQuiz(items, pool, { n = 6, canListen = true } = {}) {
   const chosen = shuffle(items).slice(0, Math.min(n, items.length))
   const types = canListen ? ['ko2th', 'th2ko', 'listen'] : ['ko2th', 'th2ko']
+  let handsOn = 0 // จำนวนโจทย์เรียงชิ้นส่วนในชุดนี้ (จำกัดไว้ ไม่ให้แทนการฝึกจำเสียงจนหมด)
+  const handsOnMax = n >= 6 ? 2 : 1
   return chosen.map((it, i) => {
-    const type = types[i % types.length]
+    let type = types[i % types.length]
+    // เพิ่มโจทย์ "ลงมือทำ": ฟังแล้วเรียง (แทนข้อฟัง) และเรียงตามความหมาย (แทนข้อไทย→เกาหลีบางข้อ)
+    const target = items.length > 1 ? orderTarget(it) : null
+    if (target && handsOn < handsOnMax) {
+      if (type === 'listen') type = 'dictate'
+      else if (type === 'th2ko') type = 'order'
+      if (type === 'dictate' || type === 'order') handsOn++
+    }
+    if (type === 'order' || type === 'dictate') {
+      let tiles = shuffle(target.parts.map((text, k) => ({ id: k, text })))
+      for (let tries = 0; tries < 5 && tiles.every((t, k) => t.id === k); tries++) tiles = shuffle(tiles)
+      return { item: it, type, tiles, target, letter: it.kind === 'letter', thText: target.th }
+    }
     // ตัวอักษรฮันกึล: ช่อง th เป็นคำอธิบายที่มีตัวอักษรนั้นอยู่ในข้อความ (เช่น "พยัญชนะ ㅂ (비읍)") ถ้าใช้เป็นตัวเลือก
     // จะเฉลยตัวเอง จึงใช้ "คำอ่านไทย" (read) แทน
     const letter = it.kind === 'letter'

@@ -1,5 +1,5 @@
 // ความสำเร็จ: ปลดล็อกอัตโนมัติเมื่อเงื่อนไขครบ (ตรวจหลังทุก action) ได้เหรียญ และบางข้อได้ไอเทมพิเศษ
-import { levelInfo, stageFor } from '../game/logic.js'
+import { levelInfo, stageFor, passedLessons, isPassed } from '../game/logic.js'
 import { ROUTINE } from './routine.js'
 import { SPECIES_LIST } from '../pixel/pets.js'
 import { bondInfo, TRICKS } from './tricks.js'
@@ -8,8 +8,8 @@ import { GEAR, SETS, rarityOf } from './shop.js'
 const HANGUL = ['vowels', 'consonants1', 'consonants2']
 
 export const ACHIEVEMENTS = [
-  { id: 'first_lesson', icon: '📖', ko: '첫 수업', th: 'เรียนจบบทแรก', coins: 20, check: (s) => Object.keys(s.lessons).length >= 1 },
-  { id: 'hangul_done', icon: '🔤', ko: '한글 졸업', th: 'จบบทฮันกึลครบทั้ง 3 บท', coins: 60, check: (s) => HANGUL.every((id) => s.lessons[id]) },
+  { id: 'first_lesson', icon: '📖', ko: '첫 수업', th: 'เรียนจบบทแรก', coins: 20, check: (s) => Object.keys(passedLessons(s.lessons)).length >= 1 },
+  { id: 'hangul_done', icon: '🔤', ko: '한글 졸업', th: 'จบบทฮันกึลครบทั้ง 3 บท', coins: 60, check: (s) => HANGUL.every((id) => isPassed(s.lessons[id])) },
   { id: 'perfect', icon: '🌟', ko: '만점!', th: 'ได้คะแนนเต็มในบทเรียน', coins: 40, check: (s) => Object.values(s.lessons).some((l) => l.best >= 100) },
   { id: 'words30', icon: '📚', ko: '단어 30개', th: 'เก็บคำศัพท์ได้ 30 คำ', coins: 40, check: (s) => Object.keys(s.srs).length >= 30 },
   { id: 'words100', icon: '🎓', ko: '단어 100개', th: 'เก็บคำศัพท์ได้ 100 คำ', coins: 120, check: (s) => Object.keys(s.srs).length >= 100 },

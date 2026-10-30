@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useReducer } from 'react'
-import { clamp, dayStr, addDays, decayPet, levelInfo, stageFor, SRS_DAYS, STREAK_BONUS, lessonReward, REVIEW_REWARD, syllableReward, DAILY_GOAL, growthMult, wantSlot, chooseWant, daysBetween, speakReward } from './logic.js'
+import { clamp, dayStr, addDays, decayPet, levelInfo, stageFor, SRS_DAYS, STREAK_BONUS, lessonReward, REVIEW_REWARD, syllableReward, DAILY_GOAL, growthMult, wantSlot, chooseWant, daysBetween, speakReward, isPassed, passedNow } from './logic.js'
 import { canListen } from './stt.js'
 import { BOX_PRICE, rollBox, featuredPick, salePrice } from './loot.js'
 import { pickQuestIds, QUEST_BY_ID, questProgress, QUEST_ALL_BONUS } from '../data/quests.js'
@@ -9,7 +9,7 @@ import { ACHIEVEMENTS } from '../data/achievements.js'
 import { DEFAULT_LOOK, GENDER_DEFAULTS, HAIR_STYLES, EYE_STYLES, SKIN_TONES, HAIR_COLORS } from '../pixel/sprites.js'
 import { SPECIES, DEFAULT_SPECIES } from '../pixel/pets.js'
 import { STORY_REWARD, PART_BY_ID } from '../data/story.js'
-import { BOND_DAILY_CAP, BOND_LEVEL_COINS, bondInfo, TRICK_BY_ID } from '../data/tricks.js'
+import { BOND_DAILY_CAP, BOND_LEVEL_COINS, EGG_TALK_CAP, bondInfo, TRICK_BY_ID } from '../data/tricks.js'
 
 const KEY = 'hyeongbum-save-v1'
 
@@ -215,12 +215,12 @@ function step(state, a) {
         if (!srs[id]) srs[id] = { box: 1, due: missed.has(id) ? today : addDays(today, 1), ok: 0, miss: missed.has(id) ? 1 : 0 }
         else if (missed.has(id)) srs[id] = { ...srs[id], box: 1, due: today, miss: srs[id].miss + 1 }
       }
-      const hadBefore = !!s.lessons[a.lessonId]
+      const hadBefore = isPassed(s.lessons[a.lessonId])
       const prev = s.lessons[a.lessonId] || { times: 0, best: 0 }
       const pct = Math.round((a.correct / a.total) * 100)
       const paid = (s.daily.lessons || {})[a.lessonId]
       const r = lessonReward({ correct: a.correct, total: a.total, hadBefore, paid })
-      s = { ...s, srs, lessons: { ...s.lessons, [a.lessonId]: { times: prev.times + 1, best: Math.max(prev.best, pct) } } }
+      s = { ...s, srs, lessons: { ...s.lessons, [a.lessonId]: { times: prev.times + 1, best: Math.max(prev.best, pct), passed: hadBefore || passedNow(a.correct, a.total) } } }
       s = { ...s, stats: { answered: s.stats.answered + a.total, correct: s.stats.correct + a.correct } }
       const paidNow = { m: r.m, xp: (paid?.xp || 0) + r.xp, coins: (paid?.coins || 0) + r.coins, growth: (paid?.growth || 0) + r.growth }
       s = { ...s, daily: { ...s.daily, lessons: { ...(s.daily.lessons || {}), [a.lessonId]: paidNow } } }
@@ -370,6 +370,14 @@ function step(state, a) {
       if (s.pet.asleep || taps >= 10) return s
       s = { ...s, pet: { ...s.pet, happy: clamp(s.pet.happy + 2) }, daily: { ...s.daily, petTaps: taps + 1 } }
       return bondGain(s, 1)
+    }
+
+    case 'EGG_TALK': { // พูดกับไข่: ไข่โตเร็วขึ้นนิดหน่อย (วันละ 3 ครั้ง ไม่โดนหักเมื่อสัตว์เลี้ยงไม่สบายใจ)
+      const n = s.daily.eggTalk || 0
+      if (s.pet.asleep || stageFor(s.pet.growth).id !== 'egg' || n >= EGG_TALK_CAP) return s
+      s = { ...s, daily: { ...s.daily, eggTalk: n + 1 } }
+      s = bondGain(s, 1)
+      return gain(s, { growth: 2, happy: 3, care: true })
     }
 
     case 'HUG': { // กอด: ดีใจมาก มีคูลดาวน์ 45 วินาที (เวลามาจากฝั่ง UI เพื่อให้ reducer บริสุทธิ์)

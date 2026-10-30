@@ -4,7 +4,7 @@ import { Avatar, Pet } from '../pixel/Characters.jsx'
 import Sprite from '../pixel/Sprite.jsx'
 import { SPECIES } from '../pixel/pets.js'
 import { stageFor, levelInfo } from '../game/logic.js'
-import { speak } from '../game/tts.js'
+import { speak, speakSeq } from '../game/lessonVoice.js'
 import { playLine, stopVoice, preloadVoices } from '../game/voices.js'
 import { voiceText } from '../game/voiceKey.js'
 import { CHAPTERS, STORY_REWARD } from '../data/story.js'
@@ -82,6 +82,11 @@ export default function StoryScene({ part, onDone, replay = false }) {
   const petStage = show.pet ? (stage === 'egg' ? 'baby' : stage) : 'baby'
   const speaker = who === 'gran' || who === 'vendor' ? WHO[who] : who === 'me' ? { ko: player.name, th: `Lv.${levelInfo(player.xp).level}` } : who === 'pet' ? { ko: pet.name, th: sp.th } : null
   const vocab = [...new Map(scenes.flatMap((s) => [...(s.vocab || []), ...(s.options || []).flatMap((o) => (o.ok === false ? [] : o.vocab || []))]).map((v) => [v.ko, v])).values()]
+  // คำสำคัญ ≤ 8 คำ: คำจากตัวเลือกที่ผู้เล่นได้ใช้ก่อน แล้วค่อยคำสั้น ๆ จากบทพูด · ที่เหลือพับเก็บไว้ ไม่ให้หน้าสรุปเป็นกำแพงคำ
+  const optionKo = new Set(scenes.flatMap((s) => (s.options || []).flatMap((o) => (o.ok === false ? [] : (o.vocab || []).map((v) => v.ko)))))
+  const ranked = [...vocab].sort((a, b) => (optionKo.has(b.ko) ? 1 : 0) - (optionKo.has(a.ko) ? 1 : 0) || (a.ko.length > 7 ? 1 : 0) - (b.ko.length > 7 ? 1 : 0))
+  const keyWords = ranked.slice(0, 8)
+  const restWords = ranked.slice(8)
   const first = !state.story?.seen?.[part.id] && !replay
 
   return (
@@ -137,10 +142,25 @@ export default function StoryScene({ part, onDone, replay = false }) {
           <small className="muted">จบช่วงนี้แล้ว · {part.th}</small>
           {vocab.length > 0 && (
             <>
-              <b>📝 คำที่ได้เจอ</b>
-              <div className="vocab-chips">
-                {vocab.map((v) => <button key={v.ko} className="chip" onClick={() => speak(v.ko)}><b className="ko">{v.ko}</b> <small>{v.th}</small></button>)}
+              <b>📝 คำสำคัญของช่วงนี้</b>
+              <div className="vocab-key">
+                {keyWords.map((v) => (
+                  <button key={v.ko} className="vk-card" onClick={() => speak(v.ko)} aria-label={`ฟัง ${v.ko}`}>
+                    <span className="vk-ico">🔊</span>
+                    <b className="ko">{v.ko}</b>
+                    <small>{v.th}</small>
+                  </button>
+                ))}
               </div>
+              <button className="pixel-btn small" onClick={() => speakSeq(keyWords.map((v) => v.ko), { slow: false })}>▶ ฟังคำสำคัญทั้งหมด</button>
+              {restWords.length > 0 && (
+                <details className="vocab-more">
+                  <summary>คำอื่นที่เจอ ({restWords.length})</summary>
+                  <div className="vocab-chips">
+                    {restWords.map((v) => <button key={v.ko} className="chip" onClick={() => speak(v.ko)}><b className="ko">{v.ko}</b> <small>{v.th}</small></button>)}
+                  </div>
+                </details>
+              )}
             </>
           )}
           {first && <div className="rewards"><span className="reward gold">+{STORY_REWARD} 🪙</span>{gives.current.map((id, k) => <span key={k} className="reward">{FOOD_BY_ID[id]?.icon} {FOOD_BY_ID[id]?.th}</span>)}</div>}

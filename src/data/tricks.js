@@ -25,3 +25,13 @@ export const TRICKS = [
   { id: 'sleep', ko: '자', read: 'จา', th: 'นอน', level: 4, anim: 'nap', icon: '😴' },
 ]
 export const TRICK_BY_ID = Object.fromEntries(TRICKS.map((t) => [t.id, t]))
+
+// พูดกับไข่: ไข่ยังทำท่าไม่ได้ จึงให้ผู้เล่น "ทักทาย" เป็นภาษาเกาหลีแทน (วันละ EGG_TALK_CAP ครั้ง) — เสียงใช้คลิปครูที่มีอยู่แล้ว
+export const EGG_TALK_CAP = 3
+export const EGG_PHRASES = [
+  { ko: '안녕하세요', read: 'อันนยองฮาเซโย', th: 'สวัสดี' },
+  { ko: '좋은 아침이에요', read: 'โจอึน อาชีมีเอโย', th: 'อรุณสวัสดิ์' },
+  { ko: '괜찮아요', read: 'แควนชานาโย', th: 'ไม่เป็นไรนะ' },
+  { ko: '사랑해', read: 'ซารังแฮ', th: 'รักนะ' },
+  { ko: '잘 자요', read: 'ชัล จาโย', th: 'หลับฝันดี' },
+]

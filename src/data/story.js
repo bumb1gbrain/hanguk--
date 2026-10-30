@@ -2,7 +2,7 @@
 // ฉาก: who = narr (ผู้เล่าเรื่อง) | gran (คุณยายเจ้าของร้าน) | me (ผู้เล่น) | pet (สัตว์เลี้ยง)
 //      bg = shop | room | night · show = สิ่งที่โชว์บนเวที · pose = happy/normal ของตัวละคร
 // ในข้อความ: {name} = ชื่อผู้เล่น · {pet} = ชื่อสัตว์เลี้ยง · {sound} = เสียงร้องของสายพันธุ์ที่เลี้ยง
-import { stageFor } from '../game/logic.js'
+import { stageFor, passedLessons } from '../game/logic.js'
 import { bondInfo } from './tricks.js'
 
 const L = (who, ko, read, th, extra = {}) => ({ who, ko, read, th, ...extra })
@@ -130,8 +130,8 @@ export const CHAPTERS = [
         id: 'c2_errand',
         title: '심부름',
         th: 'งานที่คุณยายฝากไว้',
-        hint: 'ดูตอนที่ 1 ให้จบ และเรียนอย่างน้อย 3 บท',
-        when: (s) => Object.keys(s.lessons || {}).length >= 3,
+        hint: 'ดูตอนที่ 1 ให้จบ และเรียนบทให้ผ่าน (ถูก ≥ 60%) อย่างน้อย 3 บท',
+        when: (s) => Object.keys(passedLessons(s.lessons)).length >= 3,
         after: 'c1_tale',
         scenes: [
           L('narr', '며칠 뒤, 다시 가게에 갔어요.', 'มยอชิล ดวี ดาชี กาเกเอ กัซซอโย', 'อีกไม่กี่วันต่อมา ก็แวะไปที่ร้านอีกครั้ง', { bg: 'shop', show: { avatar: 1, pet: 1 }, vocab: [{ ko: '며칠 뒤', th: 'อีกไม่กี่วัน' }, { ko: '다시', th: 'อีกครั้ง' }] }),
@@ -222,7 +222,7 @@ export const CHAPTERS = [
         title: '추석 준비',
         th: 'เตรียมวันชูซอก',
         hint: 'ดูตอนที่ 2 ให้จบ และเรียนอย่างน้อย 5 บท',
-        when: (s) => Object.keys(s.lessons || {}).length >= 5,
+        when: (s) => Object.keys(passedLessons(s.lessons)).length >= 5,
         after: 'c2_home',
         scenes: [
           L('narr', '추석 전날, 가게는 아주 바빠요.', 'ชูซอก จอนนัล กาเกนึน อาจู บาปาโย', 'วันก่อนชูซอก ร้านยุ่งมากเลย', { bg: 'shop', show: { avatar: 1, pet: 1 }, vocab: [{ ko: '전날', th: 'วันก่อน' }, { ko: '바빠요', th: 'ยุ่ง' }] }),
