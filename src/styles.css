@@ -808,3 +808,13 @@ body:has(.story) .tts-toast { bottom: auto; top: 44px; }
 @keyframes drift { to { transform: translateX(560px); } }
 
 .hint-btn { align-self: center; padding: 6px 14px; background: transparent; color: var(--muted, #b9b3d6); border: 0; box-shadow: 0 0 0 2px var(--line); font: inherit; font-size: 13px; cursor: pointer; }
+
+/* ───── ครัว (ตอนที่ 3) ───── */
+.sbg-kitchen { background: #e9dcc0; }
+.bd-tile { background: linear-gradient(rgba(255, 255, 255, 0.35), transparent 40%), repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.12) 0 2px, transparent 2px 38px), repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.12) 0 2px, transparent 2px 38px), #f0e6cf; box-shadow: inset 0 -12px 0 rgba(0, 0, 0, 0.2); }
+.bd-stove { left: 6%; bottom: 55%; display: flex; justify-content: center; width: 90px; }
+.bd-stove .steam { position: absolute; bottom: 46px; width: 14px; height: 14px; border-radius: 50%; background: rgba(255, 255, 255, 0.85); animation: steamup 2.4s ease-out infinite; }
+.bd-stove .steam.a { left: 24px; } .bd-stove .steam.b { left: 42px; animation-delay: -0.8s; } .bd-stove .steam.c { left: 60px; animation-delay: -1.6s; }
+.bd-table { right: 5%; width: 40%; bottom: 56%; height: 16px; display: flex; justify-content: space-around; align-items: flex-end; background: #a0643c; box-shadow: 0 0 0 3px #1b1424, inset 0 4px 0 #7a4a2a; padding: 0 10px; }
+.bd-table svg { position: relative; top: -18px; margin-bottom: -18px; }
+@keyframes steamup { 0% { transform: translateY(0) scale(0.6); opacity: 0; } 20% { opacity: 0.9; } 100% { transform: translateY(-60px) scale(1.5); opacity: 0; } }

@@ -79,6 +79,32 @@ function Market() {
   )
 }
 
+const SONGPYEON = ['..kkkk..', '.kwwwwk.', 'kwwwwwwk', 'kkkkkkkk']
+const POT_BIG = ['....kk....', '..kkLLkk..', '.kLLLLLLk.', 'kkkkkkkkkk', 'kddddddddk', 'kddddddddk', 'kddddddddk', '.kkkkkkkk.']
+
+function Kitchen() {
+  return (
+    <>
+      <div className="bd-wall bd-tile" />
+      <div className="bd-window"><span className="bd-sun" /></div>
+      <div className="bd-shelf s1" style={{ right: '4%', width: '46%' }}>
+        <div className="bd-items">
+          {['#e5484d', '#ffd23f', '#3fbf7f', '#b07cff'].map((c) => <Sprite key={c} grid={JAR} pal={jar(c)} scale={4} />)}
+        </div>
+        <i />
+      </div>
+      <div className="bd-stove">
+        <Sprite grid={POT_BIG} pal={{ k: '#1b1424', d: '#7b8199', L: '#b6bdd6' }} scale={8} />
+        <i className="steam a" /><i className="steam b" /><i className="steam c" />
+      </div>
+      <div className="bd-floor bd-plank" />
+      <div className="bd-table">
+        {Array.from({ length: 5 }, (_, i) => <Sprite key={i} grid={SONGPYEON} pal={{ k: '#8a6a44', w: '#fff3d6' }} scale={5} />)}
+      </div>
+    </>
+  )
+}
+
 function Night() {
   return (
     <>
@@ -98,7 +124,7 @@ function Night() {
 export default function StoryBackdrop({ bg }) {
   return (
     <div className={`bd bd-${bg}`} aria-hidden="true">
-      {bg === 'shop' ? <Shop /> : bg === 'night' ? <Night /> : bg === 'market' ? <Market /> : <Room />}
+      {bg === 'shop' ? <Shop /> : bg === 'night' ? <Night /> : bg === 'market' ? <Market /> : bg === 'kitchen' ? <Kitchen /> : <Room />}
     </div>
   )
 }

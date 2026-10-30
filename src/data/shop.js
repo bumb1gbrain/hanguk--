@@ -6,6 +6,7 @@ export const FOODS = [
   { id: 'banana', ko: '바나나우유', read: 'พานานาอูยู', th: 'นมกล้วย', price: 10, full: 15, happy: 8, icon: '🍌' },
   { id: 'kimbap', ko: '김밥', read: 'คิมบับ', th: 'คิมบับ', price: 12, full: 28, happy: 3, icon: '🍙' },
   { id: 'tteok', ko: '떡볶이', read: 'ต็อกบกกี', th: 'ต็อกบกกี', price: 18, full: 30, happy: 12, icon: '🌶️' },
+  { id: 'songpyeon', ko: '송편', read: 'ซงพยอน', th: 'ซงพยอน (ขนมข้าวชูซอก)', price: 20, full: 22, happy: 10, icon: '🥟' },
   { id: 'samgyeop', ko: '삼겹살', read: 'ซัมกยอบซัล', th: 'หมูสามชั้นย่าง', price: 30, full: 50, happy: 15, icon: '🥓' },
 ]
 
