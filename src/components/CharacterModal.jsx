@@ -13,7 +13,7 @@ import GearPreview from './GearPreview.jsx'
 const TABS = [
   { id: 'look', th: '🎨 หน้าตา' },
   { id: 'wear', th: '👕 ตัวละคร' },
-  { id: 'pet', th: '🐯 범이' },
+  { id: 'pet', th: '🐾 สัตว์เลี้ยง' },
   { id: 'room', th: '🏠 ห้อง' },
   { id: 'book', th: '📕 สะสม' },
   { id: 'achv', th: '🏆 สำเร็จ' },

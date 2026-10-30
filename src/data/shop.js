@@ -96,7 +96,7 @@ export const SLOT_GROUPS = {
 }
 export const SLOT_TH = {
   top: 'เสื้อ', bottom: 'กางเกง/กระโปรง', shoes: 'รองเท้า', hat: 'หมวก/ที่คาดผม', glasses: 'แว่น', face: 'ใบหน้า', neck: 'คอ', back: 'หลัง', hand: 'ถือในมือ',
-  pet_hat: 'หมวก 범이', pet_face: 'แว่น 범이', pet_neck: 'คอ 범이', room: 'ของตกแต่ง', wall: 'วอลเปเปอร์', floor: 'พื้น',
+  pet_hat: 'หมวกสัตว์เลี้ยง', pet_face: 'แว่นสัตว์เลี้ยง', pet_neck: 'คอสัตว์เลี้ยง', room: 'ของตกแต่ง', wall: 'วอลเปเปอร์', floor: 'พื้น',
 }
 export const isPetSlot = (slot) => slot.startsWith('pet_')
 export { SETS }

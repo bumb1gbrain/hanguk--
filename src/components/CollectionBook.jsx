@@ -7,7 +7,7 @@ const FILTERS = [
   { id: 'all', th: 'ทั้งหมด' },
   { id: 'wear', th: 'เสื้อผ้า' },
   { id: 'acc', th: 'เครื่องประดับ' },
-  { id: 'pet', th: '범이' },
+  { id: 'pet', th: 'สัตว์เลี้ยง' },
   { id: 'room', th: 'ห้อง' },
 ]
 

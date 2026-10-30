@@ -187,9 +187,9 @@ export const ITEMS = [
   item('pet_hat_halo', 'pet_hat', '천사 링', 'วงแหวนนางฟ้า', 100, 5, { pal: { y: '#ffd23f' }, grid: { 0: '.....yyyyyy.....', 1: '.....y....y.....' } }),
   item('pet_hat_sprout', 'pet_hat', '새싹', 'ต้นอ่อน', 50, 2, { pal: { g: '#3fbf7f', G: '#2a8a5a' }, grid: { 0: '......gg.gg.....', 1: '.......gGg......', 2: '........G.......' } }),
   item('pet_hat_flower', 'pet_hat', '꽃', 'ดอกไม้', 55, 3, { pal: { p: '#ff8fb1', y: '#ffd23f' }, grid: { 0: '.......pp.......', 1: '......pyyp......', 2: '.......pp.......' } }),
-  item('pet_face_sun', 'pet_face', '선글라스', 'แว่นกันแดดเสือ', 80, 4, { pal: { g: '#111018' }, grid: { 5: '..gggg....gggg..', 6: '..gggggggggggg..', 7: '..gggg....gggg..' } }),
-  item('pet_face_round', 'pet_face', '동그란 안경', 'แว่นกลมเสือ', 70, 3, { pal: { g: '#d99a1e' }, grid: { 5: '..gggg....gggg..', 6: '..g..gggggg..g..', 7: '..gggg....gggg..' } }),
-  item('pet_face_heart', 'pet_face', '하트 안경', 'แว่นหัวใจเสือ', 90, 5, { pal: { r: '#ff5c7a' }, grid: { 5: '..rr.r....r.rr..', 6: '..rrrr....rrrr..', 7: '...rr......rr...' } }, { set: 'pet_party' }),
+  item('pet_face_sun', 'pet_face', '선글라스', 'แว่นกันแดดสัตว์เลี้ยง', 80, 4, { pal: { g: '#111018' }, grid: { 5: '..gggg....gggg..', 6: '..gggggggggggg..', 7: '..gggg....gggg..' } }),
+  item('pet_face_round', 'pet_face', '동그란 안경', 'แว่นกลมสัตว์เลี้ยง', 70, 3, { pal: { g: '#d99a1e' }, grid: { 5: '..gggg....gggg..', 6: '..g..gggggg..g..', 7: '..gggg....gggg..' } }),
+  item('pet_face_heart', 'pet_face', '하트 안경', 'แว่นหัวใจสัตว์เลี้ยง', 90, 5, { pal: { r: '#ff5c7a' }, grid: { 5: '..rr.r....r.rr..', 6: '..rrrr....rrrr..', 7: '...rr......rr...' } }, { set: 'pet_party' }),
   item('pet_neck_bell', 'pet_neck', '방울', 'กระดิ่ง', 35, 2, { pal: { r: '#e5484d', y: '#ffd23f' }, grid: { 12: '.......yy.......', 13: '.......yy.......' } }),
   item('pet_neck_bow', 'pet_neck', '나비넥타이', 'โบว์ผูกคอ', 50, 3, { pal: { r: '#e5484d', d: '#a82a2f' }, grid: { 12: '.....rr..rr.....', 13: '......rdrr......' } }, { set: 'pet_party' }),
   item('pet_neck_bandana_red', 'pet_neck', '빨간 반다나', 'ผ้าพันคอแดง', 55, 3, { pal: { r: '#e5484d' }, grid: { 12: '...rrrrrrrrrr...', 13: '....rrrrrrrr....', 14: '......rrrr......' } }, { set: 'pet_winter' }),
@@ -214,9 +214,9 @@ export const SETS = [
   { id: 'royal', ko: '왕실', th: 'ราชสำนัก', icon: '👑', coins: 280, items: ['hat_crown', 'top_suit', 'back_cape', 'glasses_mono', 'face_mustache', 'skirt_long_wine'] },
   { id: 'garden', ko: '정원', th: 'สวนดอกไม้', icon: '🌷', coins: 140, items: ['top_overalls', 'pants_green', 'hat_flowercrown', 'hat_bucket', 'hat_sprout', 'hand_bouquet', 'neck_lei', 'shoes_boots'] },
   { id: 'cute', ko: '러블리', th: 'น่ารักฟรุ้งฟริ้ง', icon: '🎀', coins: 150, items: ['top_dress', 'hat_bear', 'hat_ribbon', 'hat_bunny', 'hat_cat', 'glasses_heart', 'scarf_pink', 'shoes_pink', 'skirt_yellow', 'face_whiskers', 'neck_bell', 'hand_icecream'] },
-  { id: 'pet_winter', ko: '범이 겨울', th: '범이 หน้าหนาว', icon: '🐯', coins: 80, items: ['pet_hat_santa', 'pet_neck_bandana_red', 'pet_neck_bandana_blue'] },
+  { id: 'pet_winter', ko: '펫 겨울', th: 'สัตว์เลี้ยง หน้าหนาว', icon: '🐯', coins: 80, items: ['pet_hat_santa', 'pet_neck_bandana_red', 'pet_neck_bandana_blue'] },
   { id: 'room_korea', ko: '한국 방', th: 'ห้องสไตล์เกาหลี', icon: '🏠', coins: 200, items: ['room_flag', 'room_kposter', 'room_tv', 'rug_tiger'] },
-  { id: 'pet_party', ko: '범이 파티', th: '범이 ปาร์ตี้', icon: '🎉', coins: 90, items: ['pet_hat_witch', 'pet_face_heart', 'pet_neck_bow'] },
+  { id: 'pet_party', ko: '펫 파티', th: 'สัตว์เลี้ยง ปาร์ตี้', icon: '🎉', coins: 90, items: ['pet_hat_witch', 'pet_face_heart', 'pet_neck_bow'] },
 ]
 
 // ── ห้อง: ตำแหน่ง (spot) ที่วางของได้ ──
