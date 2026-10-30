@@ -1,7 +1,7 @@
 import Sprite from './Sprite.jsx'
 import { useGame } from '../game/store.jsx'
 import {
-  avatarBase, fitToBody, AVATAR_PAL, AVATAR_SLEEPY, AVATAR_HAPPY, TOP_COLORS, OVERLAYS,
+  avatarBase, fitToBody, hipFit, AVATAR_PAL, AVATAR_SLEEPY, AVATAR_HAPPY, TOP_COLORS, OVERLAYS,
   SKIN_TONES, HAIR_COLORS, HAIR_STYLES, EYE_STYLES, DEFAULT_LOOK, GENDER_DEFAULTS,
   ROOM_SPRITES,
 } from './sprites.js'
@@ -31,7 +31,7 @@ export function Avatar({ outfit = {}, look, mood = 'normal', scale = 6, classNam
   for (const slot of SLOT_ORDER) {
     if (slot === 'late') { if (topOv?.late) layers.push(withSkin(topOv)); continue }
     const id = outfit[slot] || (slot === 'bottom' ? GENDER_DEFAULTS[lk.gender === 'f' ? 'f' : 'm'].bottom : null)
-    const ov = slot === 'top' ? topOv : OVERLAYS[id]
+    const ov = slot === 'top' ? topOv : slot === 'bottom' && female ? hipFit(OVERLAYS[id]) : OVERLAYS[id]
     if (!ov || (slot === 'top' && ov.late)) continue
     layers.push(withSkin(ov))
   }

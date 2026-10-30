@@ -54,6 +54,13 @@ export function fitToBody(ov, base, lo = 12, hi = 16) {
   return { ...ov, grid }
 }
 
+// สะโพก: ตัวหญิงเอวคอดแล้วสะโพกผาย → ขยายแถวบนสุดของกางเกง/กระโปรง (แถว 17) ที่ยังแคบอยู่ออกข้างละ 1 พิกเซล
+export function hipFit(ov) {
+  const row = ov?.grid?.[17]
+  if (!row || !/^\.{4}[^.]{8}\.{4}$/.test(row)) return ov
+  return { ...ov, grid: { ...ov.grid, 17: `...${row[4]}${row.slice(4, 12)}${row[11]}...` } }
+}
+
 export const AVATAR_PAL = {
   h: '#3b2a24', s: '#ffd9b8', e: '#1b1424', r: '#ff9aa8', m: '#c2475d',
   c: '#4f8cff', p: '#2f3a5c', b: '#1f1b2e', k: '#1b1424', w: '#ffffff',

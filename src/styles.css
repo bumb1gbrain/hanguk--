@@ -776,3 +776,7 @@ body:has(.story) .tts-toast { bottom: auto; top: 44px; }
 .mt-txt small { font-size: 11px; color: var(--muted, #b9b3d6); }
 .menu-tile .chev { opacity: 0.6; font-size: 11px; }
 .st-prop { align-self: flex-end; padding-bottom: 4px; filter: none !important; }
+
+.g-tag { font-size: 10.5px; padding: 0 5px; align-self: flex-start; }
+.g-tag.f { color: #ff9ec4; box-shadow: 0 0 0 1px #ff9ec4; }
+.g-tag.m { color: #8fc4ff; box-shadow: 0 0 0 1px #8fc4ff; }

@@ -67,6 +67,7 @@ export default function Shop() {
         <div className="ko s-name">{g.ko}</div>
         <small className="s-th">{g.th}</small>
         <small className="rar-tag" style={{ color: RARITY[g.rarity].c }}>● {RARITY[g.rarity].th}</small>
+        {g.gender && <small className={`g-tag ${g.gender}`}>{g.gender === 'f' ? '♀ ทรงผู้หญิง' : '♂ ทรงผู้ชาย'}</small>}
         {set && !has && <small className={`set-tag ${setHave >= set.items.length - 1 ? 'near' : ''}`}>🧩 {set.ko} {setHave}/{set.items.length}{setHave === set.items.length - 1 ? ' · ชิ้นสุดท้าย!' : ''}</small>}
         {has ? (
           <button className={`pixel-btn ${wornNow ? 'on' : ''}`} onClick={() => dispatch({ type: 'EQUIP', id: g.id })}>

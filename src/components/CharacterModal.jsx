@@ -36,7 +36,7 @@ function OwnedList({ slots, wornOf, state, dispatch }) {
                 return (
                   <button key={g.id} className={`wd-item pixel-box rar-${g.rarity} ${worn ? 'on' : ''}`} onClick={() => dispatch({ type: 'EQUIP', id: g.id })}>
                     <GearPreview g={g} outfit={state.player.outfit} />
-                    <small className="ko">{g.ko}</small>
+                    <small className="ko">{g.gender ? (g.gender === 'f' ? '♀ ' : '♂ ') : ''}{g.ko}</small>
                     <small className="muted">{worn ? '✔ ใช้อยู่' : g.slot === 'room' ? 'วาง' : 'ใช้'}</small>
                   </button>
                 )

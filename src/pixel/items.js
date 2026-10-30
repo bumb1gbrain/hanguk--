@@ -20,6 +20,7 @@ const SHAPES = {
   skirt: { 17: '...pppppppppp...', 18: '...pppppppppp...', 19: '....sss..sss....' },
   long: { 17: '...pppppppppp...', 18: '..pppppppppppp..', 19: '..pppppppppppp..' },
   jogger: { 17: '....pppppppp....', 18: '....ppp..ppp....', 19: '....www..www....' },
+  cargo: { 17: '....pppppppp....', 18: '....pxp..pxp....', 19: '....ppp..ppp....' },
   plaid: { 17: '...pxpxpxpxpx...', 18: '...xpxpxpxpxp...', 19: '....sss..sss....' },
 }
 const bottom = (id, ko, th, price, level, shape, color, extra = {}) =>
@@ -64,6 +65,13 @@ export const ITEMS = [
   top('top_overalls', '멜빵바지', 'ชุดเอี๊ยม', 95, 5, '#f4f4f8', { pal: { b: '#4a7bd0' }, grid: { 12: '....b......b....', 13: '....b......b....', 14: '....bbbbbbbb....', 15: '....bbbbbbbb....', 16: '....bbbbbbbb....' } }, { set: 'garden' }),
   top('top_padded', '패딩', 'เสื้อพองกันหนาว', 110, 6, '#4fa3d9', { pal: { d: '#2f7fb0' }, grid: { 13: '...dddddddddd...', 15: '..dddddddddddd..' } }, { set: 'winter' }),
   top('top_sailor', '세일러복', 'ชุดกะลาสี', 130, 6, '#f4f4f8', { pal: { n: '#2f3a5c', r: '#e5484d' }, grid: { 12: '....nn....nn....', 13: '.....nnnnnn.....', 14: '......nrrn......' } }, { set: 'school' }),
+  // ───────── เสื้อเฉพาะเพศ (gender: 'f' | 'm' — ใส่ข้ามเพศได้ แต่ออกแบบมาให้พอดีกับทรงตัวของเพศนั้น) ─────────
+  top('top_crop', '크롭티', 'ครอปท็อปเผยเอว', 60, 3, '#ff8fb1', { pal: {}, grid: { 15: '....ssssssss....', 16: '...ssssssssss...' } }, { gender: 'f' }),
+  top('top_blouse', '리본 블라우스', 'เบลาส์ผูกโบว์', 75, 4, '#ffffff', { pal: { x: '#e5484d' }, grid: { 12: '.....xx..xx.....', 13: '......xxxx......' } }, { gender: 'f' }),
+  top('top_offshoulder', '오프숄더', 'เสื้อเปิดไหล่', 85, 5, '#c9a0ff', { pal: {}, grid: { 12: '....ss....ss....', 13: '...ss......ss...' } }, { gender: 'f' }),
+  top('top_tank', '나시', 'เสื้อกล้าม', 45, 2, '#3a3748', { pal: {}, grid: { 12: '...ss......ss...', 13: '..ss........ss..', 14: '..ss........ss..', 15: '..ss........ss..' } }, { gender: 'm' }),
+  top('top_polo', '카라 티', 'เสื้อโปโล', 60, 3, '#3fbf7f', { pal: { x: '#f4f4f8' }, grid: { 12: '....xx....xx....', 13: '.....x....x.....', 14: '.......xx.......' } }, { gender: 'm' }),
+  top('top_varsity', '야구점퍼', 'แจ็กเก็ตเบสบอล', 90, 5, '#e5484d', { pal: { x: '#f4f4f8' }, grid: { 13: '..xx........xx..', 14: '..xx........xx..', 15: '..xx........xx..', 16: '..xx........xx..' } }, { gender: 'm' }),
   top('top_dress', '원피스', 'เดรส', 140, 5, '#e58aa8', { pal: { p: '#e58aa8' }, grid: { 17: '...pppppppppp...', 18: '..pppppppppppp..', 19: '..pppppppppppp..' } }, { late: true, set: 'cute' }),
   top('top_hanbok_pink', '분홍 한복', 'ฮันบกสีชมพู', 210, 7, '#fff2d6', { pal: { R: '#ff8fb1', Y: '#ffd23f', B: '#7cc4ff', x: '#ff8fb1' }, grid: HANBOK_GRID }, { set: 'hanbok' }),
 
@@ -78,6 +86,8 @@ export const ITEMS = [
   bottom('shorts_khaki', '카키 반바지', 'ขาสั้นสีกากี', 45, 3, 'shorts', '#b39b6b'),
   bottom('shorts_pink', '분홍 반바지', 'ขาสั้นสีชมพู', 50, 3, 'shorts', '#ff8fb1'),
   bottom('shorts_red', '빨간 반바지', 'ขาสั้นสีแดง', 50, 3, 'shorts', '#e5484d'),
+  bottom('pants_cargo', '카고 바지', 'กางเกงคาร์โก้', 70, 4, 'cargo', '#6b7a4a', { gender: 'm' }),
+  bottom('shorts_high', '하이웨이스트 반바지', 'กางเกงขาสั้นเอวสูง', 55, 3, 'shorts', '#e58aa8', { gender: 'f' }),
   bottom('skirt_red', '빨간 치마', 'กระโปรงสีแดง', 55, 3, 'skirt', '#c2475d'),
   bottom('skirt_mint', '민트 치마', 'กระโปรงสีมิ้นต์', 55, 3, 'skirt', '#6fd6b5'),
   bottom('skirt_black', '검은 치마', 'กระโปรงสีดำ', 60, 4, 'skirt', '#26242c'),
