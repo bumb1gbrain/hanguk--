@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { speak } from '../game/tts.js'
+import { speakFor } from '../game/tts.js'
 import { SpeakBtn } from './ui.jsx'
 
 const PROMPT = {
@@ -24,7 +24,7 @@ export default function Quiz({ questions, onAnswer, onFinish }) {
   const sayText = q ? q.item.speak || q.item.ko : ''
 
   useEffect(() => {
-    if (q && q.type === 'listen') setTimeout(() => speak(sayText), 250)
+    if (q && q.type === 'listen') setTimeout(() => speakFor(q.item, { quiz: true }), 250)
   }, [i]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!q) return null
@@ -37,7 +37,7 @@ export default function Quiz({ questions, onAnswer, onFinish }) {
     if (good) setCorrect((c) => c + 1)
     else setMissed((m) => (m.some((x) => x.id === q.item.id) ? m : [...m, q.item]))
     onAnswer?.(q.item, good)
-    if (q.type !== 'listen') speak(sayText)
+    if (q.type !== 'listen') speakFor(q.item) // เฉลยแล้วอ่านให้ฟัง (ตัวอักษรจะอ่านครบทั้งชื่อ พยางค์ และคำตัวอย่าง)
     navigator.vibrate?.(good ? 15 : [30, 40, 30])
   }
 
@@ -57,12 +57,15 @@ export default function Quiz({ questions, onAnswer, onFinish }) {
         {q.type === 'ko2th' && (
           <>
             <div className="big-ko">{q.item.ko}</div>
-            <SpeakBtn text={sayText} />
+            <SpeakBtn text={sayText} item={q.item} />
           </>
         )}
         {q.type === 'th2ko' && <div className="big-th">{q.thText ?? q.item.th}</div>}
         {q.type === 'listen' && (
-          <button className="listen-btn" onClick={() => speak(sayText)}>🔊<small>แตะเพื่อฟังอีกครั้ง</small></button>
+          <div className="listen-row">
+            <button className="listen-btn" onClick={() => speakFor(q.item, { quiz: true })}>🔊<small>แตะเพื่อฟังอีกครั้ง</small></button>
+            <button className="listen-btn slow" onClick={() => speakFor(q.item, { quiz: true, slow: true })} aria-label="ฟังแบบช้า">🐢<small>ช้า ๆ</small></button>
+          </div>
         )}
       </div>
 

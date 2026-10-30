@@ -1,4 +1,4 @@
-import { speak } from '../game/tts.js'
+import { speak, speakFor } from '../game/tts.js'
 
 export function Bar({ value, max = 100, color = 'var(--accent)', label, icon }) {
   const pct = Math.round((value / max) * 100)
@@ -17,11 +17,11 @@ export function Bar({ value, max = 100, color = 'var(--accent)', label, icon }) 
   )
 }
 
-export function SpeakBtn({ text, small }) {
+export function SpeakBtn({ text, small, item }) {
   return (
     <button
       className={`speak ${small ? 'small' : ''}`}
-      onClick={(e) => { e.stopPropagation(); speak(text) }}
+      onClick={(e) => { e.stopPropagation(); item ? speakFor(item) : speak(text) }}
       aria-label="ฟังเสียง"
     >
       🔊

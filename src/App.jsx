@@ -5,8 +5,11 @@ import { suggestLesson } from './data/lessons.js'
 import { GEAR } from './data/shop.js'
 import { ACH_BY_ID } from './data/achievements.js'
 import { DEFAULT_LOOK } from './pixel/sprites.js'
+import { SPECIES } from './pixel/pets.js'
+import { BOND_LEVEL_COINS } from './data/tricks.js'
 import LookEditor from './components/LookEditor.jsx'
 import { useSync } from './sync/SyncProvider.jsx'
+import { canSpeak, speakSeq, getTtsPrefs, setTtsPrefs, listKoVoices, currentVoiceName } from './game/tts.js'
 import GearPreview from './components/GearPreview.jsx'
 import { GEAR_BY_ID, FOOD_BY_ID, RARITY } from './data/shop.js'
 import Home from './pages/Home.jsx'
@@ -55,7 +58,7 @@ function LootNotice({ n, onClose }) {
             {g && <p>{g.th}<br /><b style={{ color: rar.c }}>● {rar.ko} · {rar.th}</b>{loot.source === 'buy' ? '' : <><br /><small className="muted">เก็บเข้าคอลเลกชันแล้ว — ไปสวมได้ที่ ตัวละคร ▸ ตู้เสื้อผ้า</small></>}</p>}
             {loot.kind === 'coins' && <><h2>+{loot.coins} 🪙</h2><p><small className="muted">ได้เหรียญ!</small></p></>}
             {loot.kind === 'refund' && <><h2>+{loot.coins} 🪙</h2><p><small className="muted">คุณมีไอเทมครบทุกชิ้นแล้ว! คืนเงินให้เต็มจำนวน</small></p></>}
-            {food && <><h2 className="ko">{food.ko}</h2><p>ได้อาหารให้ 범이 1 ชิ้น <small className="muted">(อยู่ในกระเป๋า)</small></p></>}
+            {food && <><h2 className="ko">{food.ko}</h2><p>ได้อาหารให้สัตว์เลี้ยง 1 ชิ้น <small className="muted">(อยู่ในกระเป๋า)</small></p></>}
             <button className="pixel-btn primary" onClick={onClose}>{big ? '와! 대박!' : '좋아요!'}</button>
           </>
         )}
@@ -111,6 +114,32 @@ function Notice({ n, onClose }) {
       </Modal>
     )
   }
+  if (n.type === 'adopt') {
+    const sp = SPECIES[n.species]
+    return (
+      <Modal onClose={onClose}>
+        <div className="center">
+          <Pet species={n.species} stage="egg" scale={7} className="wobble" outfit={{}} />
+          <h2>{sp.icon} ได้ไข่ {sp.ko} แล้ว!</h2>
+          <p>ไข่ของ <b>{sp.ko}</b> ({sp.th}) ถูกเก็บไว้ใน 🏠 บ้านสัตว์เลี้ยง · ไปที่หน้า Home ▸ บ้านสัตว์เลี้ยง แล้วกด “เลี้ยงตัวนี้” เพื่อเริ่มฟักไข่ได้เลย</p>
+          <p className="muted small">เสียงร้อง: <span className="ko">{sp.sound.ko}</span> ({sp.sound.read}) — {sp.sound.th}</p>
+          <button className="pixel-btn primary" onClick={onClose}>좋아요!</button>
+        </div>
+      </Modal>
+    )
+  }
+  if (n.type === 'bond') {
+    return (
+      <Modal onClose={onClose}>
+        <div className="center">
+          <Pet species={n.species} stage="teen" mood="happy" scale={7} className="bob" outfit={{}} />
+          <h2>💞 ความผูกพัน Lv.{n.level}!</h2>
+          <p><b>{n.name}</b> สนิทกับคุณมากขึ้น · ได้โบนัส 🪙{BOND_LEVEL_COINS}{n.level < 5 ? ' · อาจมีคำสั่งใหม่ให้สอนแล้ว!' : ''}</p>
+          <button className="pixel-btn primary" onClick={onClose}>사랑해!</button>
+        </div>
+      </Modal>
+    )
+  }
   if (n.type === 'evolve') {
     const st = STAGES.find((s) => s.id === n.stage)
     const hatch = n.stage === 'baby' // ฟักไข่ครั้งแรก = ช่วงเด่นของวันแรก ๆ
@@ -120,7 +149,7 @@ function Notice({ n, onClose }) {
           <Pet stage={n.stage} mood="happy" scale={7} className="evolve" />
           {hatch && <div className="hatch-fx">✨ 🐣 ✨</div>}
           <h2>{hatch ? '알이 깼어요!' : `${state.pet.name}가 자랐어요!`}</h2>
-          <p>{hatch ? <>ไข่ฟักแล้ว! <b>{state.pet.name}</b> ลูกเสือน้อยออกมาทักทายคุณ — ดูแลและเรียนด้วยกันต่อนะ</> : <>{state.pet.name} เติบโตเป็น <b>{st.ko}</b> ({st.th}) แล้ว!</>}</p>
+          <p>{hatch ? <>ไข่ฟักแล้ว! <b>{state.pet.name}</b> ออกมาทักทายคุณ — ดูแลและเรียนด้วยกันต่อนะ</> : <>{state.pet.name} เติบโตเป็น <b>{st.ko}</b> ({st.th}) แล้ว!</>}</p>
           <button className="pixel-btn primary" onClick={onClose}>와! 대박!</button>
         </div>
       </Modal>
@@ -207,6 +236,47 @@ const SYNC_TEXT = {
   paused: '⏸ รอคุณเลือกเซฟ (กดซิงก์ตอนนี้เพื่อเลือก)',
 }
 
+const SPEEDS = [
+  { rate: 0.65, th: 'ช้า' },
+  { rate: 0.85, th: 'ปกติ' },
+  { rate: 1.0, th: 'เร็ว' },
+]
+
+// ตั้งค่าเสียงอ่าน: เลือกเสียง (ถ้าเครื่องมีหลายเสียงเกาหลี) + ความเร็ว + ปุ่มทดสอบคู่เสียงที่ฟังยาก
+function VoiceSettings() {
+  const [prefs, setPrefs] = useState(getTtsPrefs())
+  const [voices, setVoices] = useState(listKoVoices())
+  useEffect(() => {
+    if (!canSpeak()) return undefined
+    const on = () => setVoices(listKoVoices())
+    window.speechSynthesis.addEventListener?.('voiceschanged', on)
+    return () => window.speechSynthesis.removeEventListener?.('voiceschanged', on)
+  }, [])
+  if (!canSpeak()) return null
+  const update = (patch) => { setTtsPrefs(patch); setPrefs(getTtsPrefs()) }
+  const active = prefs.voice || currentVoiceName()
+  return (
+    <div className="choices">
+      <small>🔊 เสียงอ่านภาษาเกาหลี</small>
+      <div className="row gap">
+        {SPEEDS.map((sp) => (
+          <button key={sp.rate} className={`choice ${prefs.rate === sp.rate ? 'on' : ''}`} onClick={() => update({ rate: sp.rate })}>{sp.th}</button>
+        ))}
+      </div>
+      {voices.length > 1 && (
+        <label className="field">
+          <span>เสียงผู้อ่าน (ลองเปลี่ยนถ้าฟังยาก)</span>
+          <select value={active || ''} onChange={(e) => update({ voice: e.target.value || null })}>
+            {voices.map((v) => <option key={v.name} value={v.name}>{v.name}</option>)}
+          </select>
+        </label>
+      )}
+      <button className="pixel-btn small" onClick={() => speakSeq(['가', '카', '까', '자', '차', '어', '오', '으', '우'], { gap: 650 })}>▶ ทดสอบเสียง (가 카 까 · 자 차 · 어 오 · 으 우)</button>
+      <small className="muted">ถ้าฟังคู่เสียงใกล้กันไม่ออก ลองเลือก "ช้า" หรือเปลี่ยนเสียงผู้อ่าน · ในบทเรียนมีปุ่ม 🐢 ฟังแบบช้า</small>
+    </div>
+  )
+}
+
 // บัญชี & ซิงก์ (แสดงเมื่อมีการตั้งค่า Supabase เท่านั้น)
 function SyncSection() {
   const sync = useSync()
@@ -255,6 +325,7 @@ function Settings({ onClose }) {
           ))}
         </div>
       </div>
+      <VoiceSettings />
       <SyncSection />
       <p className="muted small">
         คำที่เรียนแล้ว {Object.keys(state.srs).length} · ตอบทั้งหมด {state.stats.answered} ข้อ · ความแม่นยำ {acc}%

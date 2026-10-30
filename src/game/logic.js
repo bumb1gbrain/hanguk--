@@ -5,9 +5,9 @@ export const DAILY_GOAL = 50
 export const SRS_DAYS = [0, 1, 2, 4, 7, 15, 30] // index = box
 export const STAGES = [
   { id: 'egg', min: 0, ko: '알', th: 'ไข่' },
-  { id: 'baby', min: 30, ko: '아기 범', th: 'ลูกเสือ' },
-  { id: 'teen', min: 150, ko: '꼬마 범', th: 'เสือน้อย' },
-  { id: 'adult', min: 400, ko: '멋진 범', th: 'เสือหนุ่มสุดเท่' },
+  { id: 'baby', min: 30, ko: '아기', th: 'วัยเบบี๋' },
+  { id: 'teen', min: 150, ko: '꼬마', th: 'วัยเด็ก' },
+  { id: 'adult', min: 400, ko: '다 자란', th: 'โตเต็มวัย' },
 ]
 
 // ── รางวัล: กันการปั๊มเหรียญ/XP จากบทเดิมซ้ำ ──

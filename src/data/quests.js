@@ -9,7 +9,7 @@ export const QUESTS = [
   { id: 'routine', icon: '✅', ko: '루틴 3개 하기', th: 'ติ๊กกิจวัตรจริง 3 ข้อ', target: 3, xp: 6, coins: 5 },
   { id: 'perfect', icon: '🌟', ko: '만점 받기', th: 'ทำแบบทดสอบบทเรียนได้คะแนนเต็ม 1 ครั้ง', target: 1, xp: 10, coins: 8 },
   { id: 'speak', icon: '🎤', ko: '말하기 3번', th: 'พูดตามให้ผ่าน 3 ประโยค', target: 3, xp: 8, coins: 5 },
-  { id: 'care', icon: '🐯', ko: '범이 돌보기 3번', th: 'ดูแล 범이 3 ครั้ง (ให้อาหาร/เล่น/อาบน้ำ)', target: 3, xp: 6, coins: 4 },
+  { id: 'care', icon: '🐾', ko: '펫 돌보기 3번', th: 'ดูแลสัตว์เลี้ยง 3 ครั้ง (ให้อาหาร/เล่น/อาบน้ำ)', target: 3, xp: 6, coins: 4 },
 ]
 
 export const QUEST_BY_ID = Object.fromEntries(QUESTS.map((q) => [q.id, q]))

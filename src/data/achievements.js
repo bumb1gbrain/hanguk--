@@ -1,6 +1,8 @@
 // ความสำเร็จ: ปลดล็อกอัตโนมัติเมื่อเงื่อนไขครบ (ตรวจหลังทุก action) ได้เหรียญ และบางข้อได้ไอเทมพิเศษ
 import { levelInfo, stageFor } from '../game/logic.js'
 import { ROUTINE } from './routine.js'
+import { SPECIES_LIST } from '../pixel/pets.js'
+import { bondInfo, TRICKS } from './tricks.js'
 import { GEAR, SETS, rarityOf } from './shop.js'
 
 const HANGUL = ['vowels', 'consonants1', 'consonants2']
@@ -13,11 +15,15 @@ export const ACHIEVEMENTS = [
   { id: 'words100', icon: '🎓', ko: '단어 100개', th: 'เก็บคำศัพท์ได้ 100 คำ', coins: 120, check: (s) => Object.keys(s.srs).length >= 100 },
   { id: 'first_speak', icon: '🎤', ko: '첫 발음', th: 'พูดตามผ่านครั้งแรก', coins: 30, check: (s) => (s.stats.spoken || 0) >= 1 },
   { id: 'speak50', icon: '🗣️', ko: '말하기 달인', th: 'พูดตามผ่านครบ 50 ประโยค', coins: 120, check: (s) => (s.stats.spoken || 0) >= 50 },
+  { id: 'pets3', icon: '🐾', ko: '동물 친구들', th: 'มีสัตว์เลี้ยงครบ 3 สายพันธุ์', coins: 100, check: (s) => 1 + Object.keys(s.petBox || {}).length >= 3 },
+  { id: 'pets_all', icon: '🦁', ko: '동물원', th: 'สะสมสัตว์เลี้ยงครบทุกสายพันธุ์', coins: 400, check: (s) => 1 + Object.keys(s.petBox || {}).length >= SPECIES_LIST.length },
+  { id: 'bond3', icon: '💞', ko: '단짝', th: 'ความผูกพันกับสัตว์เลี้ยงถึงระดับ 3', coins: 60, check: (s) => bondInfo(s.pet.bond || 0).level >= 3 },
+  { id: 'trickster', icon: '🎓', ko: '훈련사', th: 'สอนคำสั่งครบทุกท่าในวันเดียว', coins: 80, check: (s) => (s.daily.tricks || []).length >= TRICKS.length },
   { id: 'streak3', icon: '🔥', ko: '3일 연속', th: 'เล่นต่อเนื่อง 3 วัน', coins: 30, check: (s) => (s.streak.best || 0) >= 3 },
   { id: 'streak7', icon: '🏅', ko: '7일 연속', th: 'เล่นต่อเนื่อง 7 วัน', coins: 80, item: 'neck_medal', check: (s) => (s.streak.best || 0) >= 7 },
   { id: 'streak30', icon: '👑', ko: '30일 연속', th: 'เล่นต่อเนื่อง 30 วัน', coins: 300, check: (s) => (s.streak.best || 0) >= 30 },
-  { id: 'hatch', icon: '🐣', ko: '알이 깼어요', th: 'ฟักไข่ 범이 สำเร็จ', coins: 30, check: (s) => stageFor(s.pet.growth).id !== 'egg' },
-  { id: 'adult', icon: '🐯', ko: '멋진 범', th: 'เลี้ยง 범이 จนโตเต็มวัย', coins: 150, item: 'hat_tiger', check: (s) => stageFor(s.pet.growth).id === 'adult' },
+  { id: 'hatch', icon: '🐣', ko: '알이 깼어요', th: 'ฟักไข่สัตว์เลี้ยงสำเร็จ', coins: 30, check: (s) => stageFor(s.pet.growth).id !== 'egg' },
+  { id: 'adult', icon: '🐯', ko: '멋진 친구', th: 'เลี้ยงสัตว์เลี้ยงจนโตเต็มวัย', coins: 150, item: 'hat_tiger', check: (s) => stageFor(s.pet.growth).id === 'adult' },
   { id: 'level5', icon: '⭐', ko: 'Lv.5', th: 'ถึงเลเวล 5', coins: 50, check: (s) => levelInfo(s.player.xp).level >= 5 },
   { id: 'level10', icon: '🌠', ko: 'Lv.10', th: 'ถึงเลเวล 10', coins: 150, check: (s) => levelInfo(s.player.xp).level >= 10 },
   { id: 'shopper', icon: '🛍️', ko: '쇼핑왕', th: 'มีไอเทมครบ 15 ชิ้น', coins: 40, check: (s) => s.player.owned.length >= 15 },

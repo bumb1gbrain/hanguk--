@@ -7,6 +7,8 @@ import { FOOD_BY_ID, GEAR_BY_ID, STREAK_FREEZE, isPetSlot } from '../data/shop.j
 import { ROUTINE } from '../data/routine.js'
 import { ACHIEVEMENTS } from '../data/achievements.js'
 import { DEFAULT_LOOK, GENDER_DEFAULTS, HAIR_STYLES, EYE_STYLES, SKIN_TONES, HAIR_COLORS } from '../pixel/sprites.js'
+import { SPECIES, DEFAULT_SPECIES } from '../pixel/pets.js'
+import { BOND_DAILY_CAP, BOND_LEVEL_COINS, bondInfo, TRICK_BY_ID } from '../data/tricks.js'
 
 const KEY = 'hyeongbum-save-v1'
 
@@ -49,15 +51,22 @@ function equipItem(s, g, toggle) {
   return { ...s, player: { ...s.player, outfit } }
 }
 
+// สัตว์เลี้ยงตัวใหม่ (ไข่) ของสายพันธุ์นั้น
+export function freshPet(species = DEFAULT_SPECIES) {
+  const sp = SPECIES[species] || SPECIES[DEFAULT_SPECIES]
+  return { name: sp.name, species: sp.id, full: 70, happy: 70, energy: 90, asleep: false, growth: 0, clean: 80, bond: 0, want: null, wantDone: null, outfit: {}, lastTick: Date.now() }
+}
+
 export function newDaily(date, dueCount = 0, featured) { // featured undefined = ยังไม่ได้สุ่ม (rollDay จะสุ่มให้)
-  return { date, xp: 0, routine: [], lessons: {}, reviewed: [], syllable: 0, perfect: 0, care: 0, speaking: 0, claimed: [], goalPaid: false, boxOpened: false, featured, quests: pickQuestIds(date, { dueCount, listen: canListen() }) }
+  return { date, xp: 0, routine: [], lessons: {}, reviewed: [], syllable: 0, perfect: 0, care: 0, speaking: 0, claimed: [], goalPaid: false, boxOpened: false, petTaps: 0, bondGain: 0, tricks: [], featured, quests: pickQuestIds(date, { dueCount, listen: canListen() }) }
 }
 
 export function freshState() {
   return {
     v: 1,
     player: { name: '나', xp: 0, coins: 60, outfit: { top: 'top_blue' }, owned: [...DEFAULT_OWNED], room: DEFAULT_ROOM, look: DEFAULT_LOOK, goal: DAILY_GOAL, skipHangul: false, freezes: 0, routineOff: [], boxes: 0, freeBoxes: 0, wish: [] },
-    pet: { name: '범이', full: 70, happy: 70, energy: 90, asleep: false, growth: 0, clean: 80, want: null, wantDone: null, outfit: {}, lastTick: Date.now() },
+    pet: freshPet(DEFAULT_SPECIES),
+    petBox: {}, // สัตว์เลี้ยงตัวอื่นที่รับเลี้ยงไว้ (พักอยู่ ไม่ลดค่าสถานะ) คีย์ = สายพันธุ์
     inventory: { milk: 2 },
     srs: {},
     lessons: {},
@@ -80,7 +89,7 @@ function migrateRoom(player = {}) {
 // รวมเซฟดิบ (จาก localStorage หรือคลาวด์) เข้ากับค่าเริ่มต้น: เติมฟิลด์ใหม่ให้เซฟเก่า และกันค่าเพี้ยน
 export function hydrate(s) {
   const f = freshState()
-  return { ...f, ...s, player: { ...f.player, ...s.player, look: { ...f.player.look, ...(s.player && s.player.look) }, owned: [...new Set([...(s.player?.owned || []), ...DEFAULT_OWNED])], room: migrateRoom(s.player) }, pet: { ...f.pet, ...s.pet, outfit: { ...(s.pet?.outfit || {}) } }, daily: { ...f.daily, ...s.daily }, streak: { ...f.streak, ...s.streak }, notices: [] }
+  return { ...f, ...s, player: { ...f.player, ...s.player, look: { ...f.player.look, ...(s.player && s.player.look) }, owned: [...new Set([...(s.player?.owned || []), ...DEFAULT_OWNED])], room: migrateRoom(s.player) }, pet: { ...f.pet, ...s.pet, outfit: { ...(s.pet?.outfit || {}) } }, petBox: Object.fromEntries(Object.entries(s.petBox || {}).filter(([id]) => SPECIES[id]).map(([id, p]) => [id, { ...freshPet(id), ...p, outfit: { ...(p.outfit || {}) } }])), daily: { ...f.daily, ...s.daily }, streak: { ...f.streak, ...s.streak }, notices: [] }
 }
 
 function load() {
@@ -133,6 +142,19 @@ function touchStreak(s) {
   if (count > 1) notices.push({ type: 'streak', count, bonus })
   const player = { ...s.player, freezes: have - used, coins: s.player.coins + bonus }
   return { ...s, player, streak: { count, last: today, best: Math.max(s.streak.best || 0, count) }, notices }
+}
+
+// ความผูกพัน: เพิ่มได้สูงสุด BOND_DAILY_CAP ต่อวัน (กันปั๊มจากการกดรัว) เลื่อนระดับได้เหรียญโบนัส + แจ้งเตือน
+function bondGain(s, n) {
+  const used = s.daily.bondGain || 0
+  const add = Math.max(0, Math.min(n, BOND_DAILY_CAP - used))
+  if (!add) return s
+  const before = bondInfo(s.pet.bond || 0).level
+  const bond = (s.pet.bond || 0) + add
+  const after = bondInfo(bond).level
+  const player = after > before ? { ...s.player, coins: s.player.coins + BOND_LEVEL_COINS * (after - before) } : s.player
+  const notices = after > before ? [...s.notices, { type: 'bond', level: after, species: s.pet.species || DEFAULT_SPECIES, name: s.pet.name }] : s.notices
+  return { ...s, player, notices, pet: { ...s.pet, bond }, daily: { ...s.daily, bondGain: used + add } }
 }
 
 function gain(s, { xp = 0, coins = 0, growth = 0, happy = 0, care = false }) {
@@ -307,13 +329,16 @@ function step(state, a) {
       s = { ...s, inventory: { ...s.inventory, [f.id]: s.inventory[f.id] - 1 } }
       s = { ...s, pet: { ...s.pet, full: clamp(s.pet.full + f.full), wantDone: hit ? want.slot : s.pet.wantDone } }
       s = { ...s, daily: { ...s.daily, care: (s.daily.care || 0) + 1 } }
-      return gain(s, { xp: hit ? 3 : 0, growth: 4 + (hit ? 3 : 0), happy: f.happy + (hit ? 10 : 0), care: true })
+      const fav = (SPECIES[s.pet.species] || SPECIES[DEFAULT_SPECIES]).fav === f.id // อาหารโปรดของสายพันธุ์ → ดีใจเพิ่ม
+      s = bondGain(s, fav ? 3 : 2)
+      return gain(s, { xp: hit ? 3 : 0, growth: 4 + (hit ? 3 : 0), happy: f.happy + (hit ? 10 : 0) + (fav ? 6 : 0), care: true })
     }
 
     case 'PLAY': {
       if (s.pet.asleep || s.pet.energy < 10) return s
       s = { ...s, pet: { ...s.pet, energy: clamp(s.pet.energy - 10), full: clamp(s.pet.full - 3), clean: clamp((s.pet.clean ?? 80) - 4) } }
       s = { ...s, daily: { ...s.daily, care: (s.daily.care || 0) + 1 } }
+      s = bondGain(s, 3)
       return gain(s, { growth: 2, happy: 12, care: true })
     }
 
@@ -321,6 +346,7 @@ function step(state, a) {
       if (s.pet.asleep || (s.pet.clean ?? 80) >= 90) return s // สะอาดอยู่แล้ว กดรัวไม่ได้
       s = { ...s, pet: { ...s.pet, clean: 100 } }
       s = { ...s, daily: { ...s.daily, care: (s.daily.care || 0) + 1 } }
+      s = bondGain(s, 2)
       return gain(s, { growth: 2, happy: 6, care: true })
     }
 
@@ -334,6 +360,47 @@ function step(state, a) {
       s = gain(s, { xp: q.xp, coins: q.coins, growth: 2, happy: 3 })
       if (qs.every((x) => now.includes(x.id))) s = gain(s, { coins: QUEST_ALL_BONUS, happy: 6 })
       return touchStreak(s)
+    }
+
+    case 'PET_TAP': { // แตะสัตว์เลี้ยง: อารมณ์ดีขึ้นนิดหน่อย + ความผูกพัน (วันละ 10 ครั้ง)
+      const taps = s.daily.petTaps || 0
+      if (s.pet.asleep || taps >= 10) return s
+      s = { ...s, pet: { ...s.pet, happy: clamp(s.pet.happy + 2) }, daily: { ...s.daily, petTaps: taps + 1 } }
+      return bondGain(s, 1)
+    }
+
+    case 'HUG': { // กอด: ดีใจมาก มีคูลดาวน์ 45 วินาที (เวลามาจากฝั่ง UI เพื่อให้ reducer บริสุทธิ์)
+      const t = a.now || 0
+      if (s.pet.asleep || t - (s.pet.lastHug || 0) < 45000) return s
+      s = { ...s, pet: { ...s.pet, happy: clamp(s.pet.happy + 8), lastHug: t }, daily: { ...s.daily, care: (s.daily.care || 0) + 1 } }
+      s = bondGain(s, 3)
+      return gain(s, { growth: 1, care: true })
+    }
+
+    case 'TRICK': { // สอนคำสั่งภาษาเกาหลี: ท่าละครั้งต่อวันที่ได้รางวัล (ท่ายังเล่นซ้ำดูได้) ต้องมีความผูกพันถึงระดับที่กำหนด
+      const t = TRICK_BY_ID[a.id]
+      const done = s.daily.tricks || []
+      if (!t || s.pet.asleep || s.pet.growth < 30 || s.pet.energy < 5 || done.includes(t.id) || bondInfo(s.pet.bond || 0).level < t.level) return s
+      s = { ...s, pet: { ...s.pet, energy: clamp(s.pet.energy - 5), happy: clamp(s.pet.happy + 4) }, daily: { ...s.daily, tricks: [...done, t.id], care: (s.daily.care || 0) + 1 } }
+      s = bondGain(s, 2)
+      return gain(s, { xp: 2, growth: 1, care: true })
+    }
+
+    case 'ADOPT': { // รับเลี้ยงสายพันธุ์ใหม่ (เริ่มเป็นไข่) เก็บไว้ในบ้านสัตว์เลี้ยง
+      const sp = SPECIES[a.species]
+      const box = s.petBox || {}
+      if (!sp || sp.id === s.pet.species || box[sp.id]) return s
+      if (levelInfo(s.player.xp).level < sp.level || s.player.coins < sp.price) return s
+      return { ...s, player: { ...s.player, coins: s.player.coins - sp.price }, petBox: { ...box, [sp.id]: freshPet(sp.id) }, notices: [...s.notices, { type: 'adopt', species: sp.id }] }
+    }
+
+    case 'SWITCH_PET': { // สลับตัวที่เลี้ยงอยู่: ตัวเดิมไปพักในบ้าน (ไม่ลดค่าสถานะระหว่างพัก)
+      const box = s.petBox || {}
+      const target = box[a.species]
+      if (!target || a.species === s.pet.species) return s
+      const now = Date.now()
+      const { [a.species]: _taken, ...rest } = box
+      return { ...s, pet: { ...target, lastTick: now }, petBox: { ...rest, [s.pet.species || DEFAULT_SPECIES]: { ...s.pet, lastTick: now } } }
     }
 
     case 'SLEEP':

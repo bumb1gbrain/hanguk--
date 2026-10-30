@@ -608,3 +608,56 @@ main { flex: 1; padding: 12px 16px calc(96px + env(safe-area-inset-bottom)); ani
 .col { display: flex; flex-direction: column; }
 .col.gap { gap: 8px; }
 .conflict-actions { margin-top: 8px; align-items: stretch; }
+
+/* ── เสียงอ่าน: ปุ่มช้า / การตั้งค่า ── */
+.listen-row { display: flex; gap: 14px; justify-content: center; }
+.listen-btn.slow { font-size: 40px; opacity: .9; }
+.field select { width: 100%; padding: 8px; background: var(--bg2); color: inherit; border: 0; box-shadow: 0 0 0 2px var(--line); font: inherit; }
+.example small { opacity: .85; }
+
+/* ───── ปฏิสัมพันธ์ตัวละคร × สัตว์เลี้ยง ───── */
+.house-link { float: right; font-size: 12px; }
+.room { overflow: hidden; }
+.avatar-spot { transition: left 0.5s steps(6); z-index: 2; }
+.pet-spot { z-index: 2; }
+.avatar-spot.cheer svg { animation: jump 0.5s steps(4) 2; }
+.avatar-spot.hug { animation: hugwalk 1.5s steps(10) forwards; }
+.avatar-spot.cmd svg { animation: cmdpose 0.5s steps(3) 2; }
+.cmd-bubble { position: absolute; top: -34px; left: 50%; transform: translateX(-30%); background: #fff; color: #000; padding: 2px 8px; box-shadow: 0 0 0 2px var(--line); display: flex; flex-direction: column; align-items: center; white-space: nowrap; animation: pop 0.2s steps(3); z-index: 5; }
+.cmd-bubble small { font-size: 10px; color: #555; }
+.fx-part { position: absolute; bottom: 30%; font-size: 16px; pointer-events: none; opacity: 0; z-index: 6; animation: fxfloat 1.2s steps(10) forwards; }
+.fx-part.from-pet { right: 24%; }
+.fx-part.from-avatar { left: 28%; }
+.pet-spot.pa-sit svg { animation: sit 1.2s steps(3) forwards; transform-origin: bottom; }
+.pet-spot.pa-jump svg { animation: jump 0.5s steps(4) 2; }
+.pet-spot.pa-paw svg { animation: paw 0.6s steps(3) 2; transform-origin: bottom; }
+.pet-spot.pa-down svg { animation: down 1.2s steps(3) forwards; transform-origin: bottom; }
+.pet-spot.pa-spin svg { animation: spin 0.6s steps(6) 2; }
+.pet-spot.pa-roll svg { animation: roll 1.2s steps(10); }
+.pet-spot.pa-dance svg { animation: dance 0.4s steps(2) 3; }
+.pet-spot.pa-nap svg { animation: down 1.2s steps(3) forwards; }
+.pet-spot.pa-munch svg { animation: munch 0.3s steps(2) 3; transform-origin: bottom; }
+.pet-spot.pa-wobble svg { animation: wobble 0.3s steps(3) 3; }
+.pet-spot.pa-nuzzle svg { animation: wobble 0.45s steps(3) 2; }
+.tricks { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.trick-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.trick-chip { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 4px 2px; background: var(--panel2, #2a2342); color: inherit; border: 0; box-shadow: 0 0 0 2px var(--line); cursor: pointer; font: inherit; }
+.trick-chip small { font-size: 10px; opacity: 0.75; }
+.trick-chip.done { box-shadow: 0 0 0 2px var(--green); }
+.trick-chip:disabled { opacity: 0.45; cursor: default; }
+.pet-house { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 10px 0; max-height: 55vh; overflow: auto; }
+.ph-card { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 6px; text-align: center; }
+.ph-card.cur { box-shadow: 0 0 0 3px var(--accent); }
+.ph-card.locked .ph-pic { filter: grayscale(1) brightness(0.55); }
+.ph-pic { min-height: 70px; display: flex; align-items: flex-end; }
+@keyframes fxfloat { 0% { opacity: 0; transform: translate(0, 0); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--dx, 0), -70px); } }
+@keyframes hugwalk { 0%, 100% { left: 26%; } 40%, 70% { left: 50%; } }
+@keyframes cmdpose { 50% { transform: translateY(-6px) rotate(-4deg); } }
+@keyframes sit { to { transform: scaleY(0.85); } }
+@keyframes down { to { transform: scaleY(0.7); } }
+@keyframes paw { 50% { transform: rotate(-12deg) translateX(-4px); } }
+@keyframes spin { 0% { transform: scaleX(1); } 25% { transform: scaleX(0.1); } 50% { transform: scaleX(-1); } 75% { transform: scaleX(0.1); } 100% { transform: scaleX(1); } }
+@keyframes roll { to { transform: rotate(360deg); } }
+@keyframes dance { 0% { transform: translateY(0) rotate(-8deg); } 50% { transform: translateY(-10px) rotate(8deg); } 100% { transform: translateY(0) rotate(-8deg); } }
+@keyframes munch { 50% { transform: scaleY(0.92) scaleX(1.05); } }
+@media (prefers-reduced-motion: reduce) { .fx-part { animation-duration: 0.01s; } .avatar-spot.hug { animation: none; } }

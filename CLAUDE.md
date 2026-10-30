@@ -30,8 +30,8 @@ src/
   game/speech_score.js evaluateSpeech(text, alts, level): syllable alignment (Needleman–Wunsch) → ops match/sub/miss/extra with per-part diffs (lead/vowel/tail) + Thai explanations & articulation tips; score = 0.6·jamo similarity (ortho vs phonetic, 연음·구개음화) + 0.4·syllable-match − extra/miss penalties; numerals 3시→세 시; repeats contained → 95. Levels: standard pass 80 / strict pass 90 (pref in localStorage 'hb-speak-level')
   game/loot.js        pure seeded RNG: free daily box (`rollBox kind=free`, pity: every 5th free box = rare+ item), paid box (90 coins, always a NEW item, odds in ODDS), `featuredPick` (daily featured item, −30%, stored in `daily.featured`), `salePrice`
   sync/               Supabase sync (optional): supabase.js (lazy client, env VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY; dead-code-eliminated when unset), syncCore.js (pure: syncKey, decide, summarize — unit-tested), SyncProvider.jsx (Google sign-in, debounced upload, pull on focus/online, conflict modal)
-  game/tts.js         speak(text) — cancel+retry watchdog; dispatches window event 'tts-problem' ('stuck'|'no-voice') -> toast in App.jsx
-  data/lessons.js     Hangul (vowels, consonants×2) + 'basics' group (받침 ×2, Sino/native numbers, time) + 9 daily-life scenes; each item {ko, rom, read(Thai reading), th, speak?, kind}
+  game/tts.js         speak(text) + speakSeq(parts,{slow,gap}) (paced sequence) + speakFor(item,{slow,quiz}) — letters play as 이름 → syllable → example word (quiz mode skips the name); user prefs {voice, rate 0.65/0.85/1.0} in localStorage 'hb-tts', slow = rate×0.62; cancel+retry watchdog; dispatches window event 'tts-problem' ('stuck'|'no-voice') -> toast in App.jsx
+  data/lessons.js     Hangul (vowels, consonants×2) + 'basics' group (받침 ×2, Sino/native numbers, time) + 9 daily-life scenes; each item {ko, rom, read(Thai reading), th, speak?, ex?, kind} (letters carry `ex` = example word starting with that sound, e.g. ㄱ→가방, used on flashcards and by speakFor so close sounds like 가/카, 자/차, 어/오 get context)
   data/routine.js     12 daily habits phrased in past tense (-았/었어요) — tick in real life for XP
   data/shop.js        foods (feed pet) + gear (hat/glasses/neck/top/room) with price & level lock
   pixel/items.js      THE collectible catalogue (sprites + shop data in one place): ITEMS (avatar+pet gear), ROOM_ITEMS (spots), WALLS, FLOORS, SETS. Validate widths with a quick node script after editing (all avatar rows = 16 chars)
@@ -99,3 +99,9 @@ src/
 - Keep all user-facing text bilingual (Korean + Thai). Korean in `.ko` class (pixel font).
 - New sprites: rows must all be the same width; avatar overlays are 16 wide and keyed by row index. Overlay '.' = pass-through (layers can only add/recolour pixels, never erase); `s` (skin) is injected into every overlay palette so shorts/skirt legs follow the skin tone. The base avatar has NO hair and NO legs: hair comes from `HAIR_STYLES`, legs from the bottom overlay (default pants_navy / skirt_navy by gender).
 - Reducer must stay pure (React StrictMode double-invokes it).
+
+## สัตว์เลี้ยงหลายสายพันธุ์ & ปฏิสัมพันธ์
+- `src/pixel/pets.js`: 7 สายพันธุ์ (tiger/chick/cat/dog/bunny/fox/panda) → `speciesSprite(id, stage, mood)` คืน `{grid, pal, dy}` (dy = แถวเสริมด้านบน เช่นหู ต้องเลื่อนของที่สวมตาม)
+- state: `pet.species`, `pet.bond`, `state.petBox` (ตัวที่พักในบ้าน ไม่ลดค่าสถานะ); actions `ADOPT`/`SWITCH_PET`/`PET_TAP`/`HUG`/`TRICK`
+- ความผูกพัน (`src/data/tricks.js`): เพดาน 30/วัน (`daily.bondGain`) เลื่อนระดับได้เหรียญ; คำสั่ง (앉아, 점프, 손, …) ปลดล็อกตามระดับ ได้รางวัลท่าละครั้ง/วัน
+- แอนิเมชันอยู่ใน `styles.css` (`.pa-*` บน `.pet-spot`, `.avatar-spot.hug/cheer/cmd`, `.fx-part`)

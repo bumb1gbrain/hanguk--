@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useGame } from '../game/store.jsx'
 import { buildQuiz } from '../game/logic.js'
-import { canSpeak, speak } from '../game/tts.js'
+import { canSpeak, speakFor } from '../game/tts.js'
 import { ALL_ITEMS } from '../data/lessons.js'
 import Quiz from '../components/Quiz.jsx'
 import { SpeakBtn } from '../components/ui.jsx'
@@ -77,10 +77,15 @@ export default function LessonView({ lesson, onClose }) {
       {phase === 'study' && (
         <div className="study">
           {lesson.note && idx === 0 && <div className="tip">💡 {lesson.note}</div>}
-          <div className="flash pixel-box" onClick={() => speak(it.speak || it.ko)}>
+          <div className="flash pixel-box" onClick={() => speakFor(it)}>
             <span className={`kind-tag ${it.kind}`}>{it.kind === 'letter' ? '글자' : it.kind === 'word' ? '단어' : '표현'}</span>
             <div className={`big-ko ${it.ko.length > 8 ? 'long' : ''}`}>{it.ko}</div>
-            {it.speak && it.kind === 'letter' && <div className="example">ตัวอย่าง: <span className="ko">{it.speak}</span></div>}
+            {it.kind === 'letter' && it.speak && (
+              <div className="example">
+                เสียงอ่าน: <span className="ko">{it.speak}</span>
+                {it.ex && <> · ตัวอย่างคำ: <span className="ko">{it.ex.ko}</span> <small>({it.ex.read} · {it.ex.th})</small></>}
+              </div>
+            )}
             {showParts && (
               <div className="syl-parts">
                 {parts.map((ch, k) => {
@@ -97,13 +102,16 @@ export default function LessonView({ lesson, onClose }) {
             <div className="read">{it.read}</div>
             <div className="rom mono">{it.rom}</div>
             <div className="mean">{it.th}</div>
-            <SpeakBtn text={it.speak || it.ko} />
+            <div className="row gap center-row">
+              <button className="speak" onClick={(e) => { e.stopPropagation(); speakFor(it) }} aria-label="ฟังเสียง">🔊 ฟัง</button>
+              <button className="speak" onClick={(e) => { e.stopPropagation(); speakFor(it, { slow: true }) }} aria-label="ฟังแบบช้า">🐢 ช้า ๆ</button>
+            </div>
           </div>
           <div className="dots">{items.map((_, k) => <span key={k} className={k === idx ? 'cur' : k < idx ? 'done' : ''} />)}</div>
           <div className="row gap">
             <button className="pixel-btn" disabled={idx === 0} onClick={() => setIdx(idx - 1)}>◀ ก่อนหน้า</button>
             {idx < items.length - 1 ? (
-              <button className="pixel-btn primary" onClick={() => { setIdx(idx + 1); speak(items[idx + 1].speak || items[idx + 1].ko) }}>ถัดไป ▶</button>
+              <button className="pixel-btn primary" onClick={() => { setIdx(idx + 1); speakFor(items[idx + 1]) }}>ถัดไป ▶</button>
             ) : (
               <button className="pixel-btn primary" onClick={startQuiz}>เริ่มแบบทดสอบ ⚔️</button>
             )}
@@ -141,7 +149,7 @@ export default function LessonView({ lesson, onClose }) {
                   <div key={m.id} className="missed-item">
                     <span className="ko">{m.ko}</span>
                     <small>{m.read} · {m.th}</small>
-                    <SpeakBtn text={m.speak || m.ko} small />
+                    <SpeakBtn text={m.speak || m.ko} item={m} small />
                   </div>
                 ))}
               </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useGame, dueItems } from '../game/store.jsx'
 import { DAILY_GOAL, MOOD_TEXT, petMood, stageFor, nextStage, levelInfo, liveStreak, dayStr, neglected, rankFor } from '../game/logic.js'
 import { suggestLesson } from '../data/lessons.js'
@@ -13,7 +13,10 @@ import PreviewModal from '../components/PreviewModal.jsx'
 import GearPreview from '../components/GearPreview.jsx'
 import { GEAR_BY_ID } from '../data/shop.js'
 import { salePrice, FEATURED_DISCOUNT } from '../game/loot.js'
-import { speak } from '../game/tts.js'
+import { speak, speakSeq } from '../game/tts.js'
+import { SPECIES } from '../pixel/pets.js'
+import { TRICKS, bondInfo } from '../data/tricks.js'
+import PetHouse from '../components/PetHouse.jsx'
 
 function greeting(h) {
   if (h >= 5 && h < 11) return { ko: '좋은 아침이에요!', th: 'อรุณสวัสดิ์!' }
@@ -32,6 +35,14 @@ export default function Home({ openLesson, go }) {
   const [charOpen, setCharOpen] = useState(false)
   const [pv, setPv] = useState(null) // ไอเทมที่เปิดดูจากหน้า Home (ของเด่น)
   const [bounce, setBounce] = useState(0)
+  const [houseOpen, setHouseOpen] = useState(false)
+  const [petAnim, setPetAnim] = useState(null) // ท่าที่สัตว์เลี้ยงกำลังทำ (trick-*)
+  const [avAct, setAvAct] = useState(null) // ท่าของตัวละคร: cheer | hug | cmd
+  const [cmd, setCmd] = useState(null) // คำสั่งที่ตัวละครกำลังพูด (บอลลูนข้อความ)
+  const [parts, setParts] = useState([]) // อนุภาคเอฟเฟกต์ลอยขึ้น (หัวใจ ดาว ฟอง ...)
+  const timers = useRef([])
+  useEffect(() => () => timers.current.forEach(clearTimeout), [])
+  const later = (fn, ms) => { timers.current.push(setTimeout(fn, ms)) }
   const { pet, player, daily } = state
   const now = new Date()
   const g = greeting(now.getHours())
@@ -64,6 +75,7 @@ export default function Home({ openLesson, go }) {
     speak(f.ko)
     setFeeding(false)
     poke()
+    burst(f.icon, 3); doAv('cheer'); doPet('munch', 900)
     setFx(hit ? `🎉 ตรงใจ! ${pet.name} ดีใจมาก (+3 XP โบนัส)` : '')
     if (hit) setTimeout(() => setFx(''), 4000)
   }
@@ -72,6 +84,48 @@ export default function Home({ openLesson, go }) {
     setBounce((b) => b + 1)
     speak(mood === 'happy' ? '행복해요' : mt.ko.replace(/[…!]/g, ''))
     setTimeout(() => setBounce(0), 700)
+  }
+
+  // ปล่อยอนุภาคลอยขึ้นจากตำแหน่งสัตว์เลี้ยง (หายเองใน ~1.2 วิ)
+  const burst = (emoji, n = 4, from = 'pet') => {
+    const base = Date.now() + Math.random()
+    const add = Array.from({ length: n }, (_, i) => ({ id: base + i, emoji, from, dx: Math.round((Math.random() - 0.5) * 60), delay: i * 90 }))
+    setParts((p) => [...p, ...add])
+    later(() => setParts((p) => p.filter((x) => !add.includes(x))), 1400)
+  }
+  const doAv = (name, ms = 900) => { setAvAct(name); later(() => setAvAct(null), ms) }
+  const doPet = (name, ms = 1000) => { setPetAnim(name); later(() => setPetAnim(null), ms) }
+  const speciesInfo = SPECIES[pet.species] || SPECIES.tiger
+  const bond = bondInfo(pet.bond || 0)
+  const tricksDone = daily.tricks || []
+  const canTrick = !pet.asleep && pet.growth >= 30 && pet.energy >= 5
+
+  // แตะสัตว์เลี้ยง: ร้องเสียงประจำสายพันธุ์ + หัวใจ
+  const tapPet = () => {
+    if (pet.asleep) { setBounce((b) => b + 1); later(() => setBounce(0), 700); burst('💤', 2); return }
+    dispatch({ type: 'PET_TAP' })
+    setBounce((b) => b + 1); later(() => setBounce(0), 700)
+    burst('❤️', 3)
+    speak(speciesInfo.sound.ko)
+  }
+
+  // กอด: ตัวละครเดินไปหาสัตว์เลี้ยงแล้วกอด (คูลดาวน์ 45 วินาที)
+  const hug = () => {
+    dispatch({ type: 'HUG', now: Date.now() })
+    doAv('hug', 1500)
+    later(() => { doPet('nuzzle', 900); burst('💞', 5) }, 700)
+    speak('사랑해')
+  }
+
+  // สอนคำสั่ง: ตัวละครพูดคำสั่งภาษาเกาหลี → สัตว์เลี้ยงทำท่า (ท่าละครั้งต่อวันที่ได้รางวัล ท่าที่ทำแล้วยังเล่นซ้ำดูได้)
+  const trick = (t) => {
+    const first = !tricksDone.includes(t.id)
+    setCmd(t)
+    doAv('cmd', 1300)
+    speakSeq([t.ko], {})
+    later(() => { doPet(t.anim, 1300); burst(first ? '⭐' : '✨', 4) }, 650)
+    later(() => setCmd(null), 1500)
+    if (first) dispatch({ type: 'TRICK', id: t.id })
   }
 
   const featured = daily.featured && !player.owned.includes(daily.featured) ? GEAR_BY_ID[daily.featured] : null
@@ -125,22 +179,27 @@ export default function Home({ openLesson, go }) {
         {room.rug && <div className={`r-rug ${RUG_CLS[room.rug] || 'rug-classic'}`} />}
         <div className="floor" />
         <button className="room-btn" onClick={() => setCharOpen(true)} aria-label="ตัวละคร">👤 ตัวละคร</button>
-        <div className="avatar-spot">
-          <Avatar outfit={player.outfit} mood={avatarMood} scale={5} className="idle" />
+        <div className={`avatar-spot ${avAct || ''}`}>
+          {cmd && <div className="cmd-bubble"><b className="ko">{cmd.ko}!</b><small>{cmd.th}</small></div>}
+          <Avatar outfit={player.outfit} mood={avAct === 'hug' ? 'happy' : avatarMood} scale={5} className="idle" />
           <span className="nametag">{player.name} · Lv.{levelInfo(player.xp).level}</span>
           <span className="nametag rank-tag ko">{rankFor(levelInfo(player.xp).level).ko}</span>
         </div>
-        <button className={`pet-spot ${bounce ? 'jump' : ''}`} onClick={poke} aria-label="แตะสัตว์เลี้ยง">
+        <button className={`pet-spot ${bounce ? 'jump' : ''} ${petAnim ? `pa-${petAnim}` : ''}`} onClick={tapPet} aria-label="แตะสัตว์เลี้ยง">
           <div className="bubble">{mt.icon}</div>
-          <Pet stage={stage.id} mood={petSprMood} scale={stage.id === 'adult' ? 5 : 4} className={mood === 'sleep' ? 'breathe' : 'bob'} />
+          <Pet stage={stage.id} mood={petAnim || bounce ? 'happy' : petSprMood} scale={stage.id === 'adult' ? 5 : 4} className={petAnim ? '' : mood === 'sleep' ? 'breathe' : 'bob'} />
           <span className="nametag">{pet.name}</span>
         </button>
+        {parts.map((p) => (
+          <span key={p.id} className={`fx-part from-${p.from}`} style={{ '--dx': `${p.dx}px`, animationDelay: `${p.delay}ms` }}>{p.emoji}</span>
+        ))}
       </div>
 
       {/* ── 범이 ── */}
       <section className="card pixel-box">
         <div>
-          <b>{pet.name}</b> <small className="muted">· {stage.ko} ({stage.th})</small>
+          <b>{pet.name}</b> <small className="muted">· {speciesInfo.icon} {speciesInfo.ko} · {stage.ko} ({stage.th})</small>
+          <button className="link house-link" onClick={() => setHouseOpen(true)}>🏠 บ้านสัตว์เลี้ยง</button>
           <div className="mood-line"><span className="ko">{mt.ko}</span> <small className="muted">{mt.th}</small></div>
         </div>
         <div className="bars-grid">
@@ -148,6 +207,9 @@ export default function Home({ openLesson, go }) {
           <Bar label="อารมณ์" icon="❤️" value={pet.happy} color="var(--pink)" />
           <Bar label="พลัง" icon="⚡" value={pet.energy} color="var(--yellow)" />
           <Bar label="สะอาด" icon="🫧" value={pet.clean ?? 80} color="var(--blue, #6bb6ff)" />
+          <div className="span2">
+            <Bar label={`💞 ความผูกพัน Lv.${bond.level}${bond.max ? ' (สูงสุด)' : ''}`} icon="" value={bond.into} max={bond.need} color="var(--pink)" />
+          </div>
           <div className="span2">
             <Bar
               label={next ? (stage.id === 'egg' ? `🥚 ใกล้ฟักเป็น ${next.ko}` : `โต → ${next.ko}`) : 'โตเต็มวัยแล้ว'}
@@ -175,9 +237,26 @@ export default function Home({ openLesson, go }) {
         {fx && <small className="good-fx">{fx}</small>}
         <div className="row gap actions">
           <button className="pixel-btn" disabled={pet.asleep} onClick={() => setFeeding(true)}>🍙 먹이</button>
-          <button className="pixel-btn" disabled={pet.asleep || pet.energy < 10} onClick={() => { dispatch({ type: 'PLAY' }); poke() }}>🎾 놀기</button>
-          <button className="pixel-btn" disabled={pet.asleep || (pet.clean ?? 80) >= 90} onClick={() => { dispatch({ type: 'WASH' }); poke() }}>🫧 씻기</button>
+          <button className="pixel-btn" disabled={pet.asleep || pet.energy < 10} onClick={() => { dispatch({ type: 'PLAY' }); poke(); burst('🎾', 3); doAv('cheer'); doPet('spin', 1100) }}>🎾 놀기</button>
+          <button className="pixel-btn" disabled={pet.asleep || (pet.clean ?? 80) >= 90} onClick={() => { dispatch({ type: 'WASH' }); poke(); burst('🫧', 6); doAv('cheer'); doPet('wobble', 1100) }}>🫧 씻기</button>
+          <button className="pixel-btn" disabled={pet.asleep} onClick={hug}>🤗 안아주기</button>
           <button className="pixel-btn" onClick={() => dispatch({ type: 'SLEEP' })}>{pet.asleep ? '☀️ 깨우기' : '🌙 재우기'}</button>
+        </div>
+        <div className="tricks">
+          <small className="muted">🎓 สอนคำสั่ง · 훈련 {canTrick ? '' : (pet.asleep ? '(กำลังหลับ)' : pet.growth < 30 ? '(ต้องฟักไข่ก่อน)' : '(พลังไม่พอ)')}</small>
+          <div className="trick-row">
+            {TRICKS.map((t) => {
+              const locked = bond.level < t.level
+              const done = tricksDone.includes(t.id)
+              return (
+                <button key={t.id} className={`trick-chip ${done ? 'done' : ''}`} disabled={locked || !canTrick} onClick={() => trick(t)} title={locked ? `ต้องผูกพัน Lv.${t.level}` : t.th}>
+                  <span>{locked ? '🔒' : t.icon}</span>
+                  <b className="ko">{t.ko}</b>
+                  <small>{locked ? `Lv.${t.level}` : done ? '✓' : t.th}</small>
+                </button>
+              )
+            })}
+          </div>
         </div>
       </section>
 
@@ -230,6 +309,7 @@ export default function Home({ openLesson, go }) {
         <small className="muted">ครบทั้ง {quests.length} ข้อ โบนัส +{QUEST_ALL_BONUS} 🪙</small>
       </details>
 
+      {houseOpen && <PetHouse onClose={() => setHouseOpen(false)} />}
       {charOpen && <CharacterModal onClose={() => setCharOpen(false)} />}
       {pv && <PreviewModal id={pv} onClose={() => setPv(null)} />}
 

@@ -172,7 +172,7 @@ const BASE_OVERLAYS = {
 export const OVERLAYS = { ...BASE_OVERLAYS, ...ITEM_OVERLAYS }
 
 // ── Tiger pet 범이 ── k=outline o=orange y=cream b=stripe p=pink e=eye w=shine r=scarf
-const TIGER_HEAD = [
+export const TIGER_HEAD = [
   '..kk........kk..',
   '.kook......kook.',
   '.kopokkkkkkopok.',
@@ -187,7 +187,7 @@ const TIGER_HEAD = [
   '.kooyyyyyyyyook.',
   '..kkooooooookk..',
 ]
-const TIGER_BODY = [
+export const TIGER_BODY = [
   '...kooyyyyook...',
   '..kbooyyyyoobk..',
   '..koooyyyyoook..',

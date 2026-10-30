@@ -3,8 +3,9 @@ import { useGame } from '../game/store.jsx'
 import {
   AVATAR, AVATAR_PAL, AVATAR_SLEEPY, AVATAR_HAPPY, TOP_COLORS, OVERLAYS,
   SKIN_TONES, HAIR_COLORS, HAIR_STYLES, EYE_STYLES, DEFAULT_LOOK, GENDER_DEFAULTS,
-  TIGER_PAL, petGrid, ROOM_SPRITES,
+  ROOM_SPRITES,
 } from './sprites.js'
+import { speciesSprite, SPECIES } from './pets.js'
 
 // ลำดับการวาด (ท้ายสุด = อยู่บนสุด) · เสื้อแบบ `late` (เช่นเดรส) วาดต่อจากรองเท้า เพื่อคลุมกางเกง
 const SLOT_ORDER = ['top', 'bottom', 'shoes', 'late', 'back', 'neck', 'face', 'glasses', 'hat', 'hand']
@@ -35,12 +36,15 @@ export function Avatar({ outfit = {}, look, mood = 'normal', scale = 6, classNam
   return <Sprite grid={grid} pal={pal} layers={layers} outline="#1b1424" scale={scale} className={className} title="ตัวละครของคุณ" />
 }
 
-// outfit: { pet_hat, pet_face, pet_neck } — ถ้าไม่ส่งมา อ่านจากเซฟ (ไข่ไม่ใส่ของ)
-export function Pet({ stage = 'egg', mood = 'normal', scale = 6, className, outfit }) {
+// outfit: { pet_hat, pet_face, pet_neck } · species: รหัสสายพันธุ์ — ถ้าไม่ส่งมา อ่านจากเซฟ (ไข่ไม่ใส่ของ)
+export function Pet({ stage = 'egg', mood = 'normal', scale = 6, className, outfit, species, style }) {
   const ctx = useGame()
   const wear = outfit || ctx?.state?.pet?.outfit || {}
-  const layers = stage === 'egg' ? [] : ['pet_neck', 'pet_face', 'pet_hat'].map((k) => OVERLAYS[wear[k]]).filter(Boolean)
-  return <Sprite grid={petGrid(stage, mood)} pal={TIGER_PAL} layers={layers} scale={scale} className={className} title="범이" />
+  const id = species || ctx?.state?.pet?.species || 'tiger'
+  const { grid, pal, dy } = speciesSprite(id, stage, mood)
+  // สไปรต์ที่มีแผ่นเสริมด้านบน (หูยาว) ทำให้แถวเลื่อนลง → เลื่อนของที่สวมตามไปด้วย
+  const layers = stage === 'egg' ? [] : ['pet_neck', 'pet_face', 'pet_hat'].map((k) => OVERLAYS[wear[k]]).filter(Boolean).map((o) => (dy ? { ...o, dy: (o.dy || 0) + dy } : o))
+  return <Sprite grid={grid} pal={pal} layers={layers} scale={scale} className={className} style={style} title={SPECIES[id]?.name || '범이'} />
 }
 
 export function RoomItem({ id, scale = 4, className, style }) {
